@@ -4,9 +4,7 @@
 #mensaje de error. Luego valida que la modalidad sea individual o por equipos. Despues valida que no hayan duplicados,
 #recorriendo la lista y comparando nombres. Si duplicado es igual a true retorna false y el mensaje de error.
 #Si todo sale bien llega al final del codigo y guarda cada dato en la lista.
-
-
-#INTENTO 1
+  
 #Diagrama de flujo D3.1.
 
 def registrardisciplina(nombre, modalidad, listadisciplinas):
