@@ -2,12 +2,14 @@ import tkinter as tk
 from tkinter import ttk, messagebox
 from Universidades import (registraruniversidad, actualizaruniversidades, borraruniversidad, enumeraruniversidades)
 from Deportistas import (registrardeportista,actualizardeportista,borrardeportista,enumerardeportistas)
-
+from Disciplinas import (registrardisciplina,borrardisciplina,enumerardisciplinas)
 AZUL="#1F4E79"
 
 listauniversidades = []
 listadeportistas= []
 listainscripciones= []
+listadisciplinas = []
+listaresultados = []
 
 #Funciones Universidades--------------------------------------------------------------------
 
@@ -161,6 +163,63 @@ def limpiarcamposdep():
     entry_dep_doc.delete(0, tk.END)
     entry_dep_univ.delete(0, tk.END)
 
+#Funciones Disciplinas-------------------------------------------------------------
+
+# NUEVO: Funciones Disciplinas
+
+# Botón CREAR: lee los campos, llama a registrardisciplina y muestra el resultado
+def accionregistrardis():
+    # .get() lee lo que hay escrito en los Entry en ese momento
+    nombre = entry_dis_nombre.get()
+    modalidad = entry_dis_modalidad.get()
+
+    # La función devuelve dos cosas: True/False y un mensaje. Las guardamos en exito y mensaje
+    exito, mensaje = registrardisciplina(nombre, modalidad, listadisciplinas)
+
+    if exito == True:
+        messagebox.showinfo("Éxito", mensaje)
+        limpiarcamposdis()
+        accionlistardis()
+    else:
+        messagebox.showerror("Error", mensaje)
+
+
+# Botón ELIMINAR: borra la disciplina cuyo nombre está escrito en la caja
+def accioneliminardis():
+    nombre = entry_dis_nombre.get()
+
+    # borrardisciplina revisa que no tenga inscripciones ni resultados antes de eliminar
+    exito, mensaje = borrardisciplina(nombre, listadisciplinas, listainscripciones, listaresultados)
+
+    if exito == True:
+        messagebox.showinfo("Éxito", mensaje)
+        limpiarcamposdis()
+        accionlistardis()
+    else:
+        messagebox.showerror("Error", mensaje)
+
+
+# Borra el Listbox y lo vuelve a llenar con las disciplinas registradas
+def accionlistardis():
+    listboxresultadosdis.delete(0, tk.END)
+
+    # enumerardisciplinas devuelve textos tipo "1. Natación | Individual"
+    resultados = enumerardisciplinas(listadisciplinas)
+
+    # Recorremos por índice, insertamos cada texto y alternamos el color de las filas
+    for i in range(len(resultados)):
+        texto = resultados[i]
+        listboxresultadosdis.insert(tk.END, texto)
+
+        if i % 2 == 0:
+            listboxresultadosdis.itemconfig(i, bg="white")
+        else:
+            listboxresultadosdis.itemconfig(i, bg="#EEF3F8")
+
+
+def limpiarcamposdis():
+    entry_dis_nombre.delete(0, tk.END)
+    entry_dis_modalidad.delete(0, tk.END)
 
 #-----------------------------------------------------------------------------------
 #------Ventana y elementos-------
@@ -310,6 +369,55 @@ font=("Segoe UI", 10), selectbackground="#CFE0F1",
 selectforeground=AZUL)
 listboxresultadosdep.pack(pady=5)
 
+#Ventana Disciplinas------------------------------------------------------
+
+
+pestañadisciplinas = ttk.Frame(notebook)
+notebook.add(pestañadisciplinas, text=" Disciplinas ")
+
+# Contenedor interno: deja un margen alrededor de todo el contenido
+framecontenidodis = tk.Frame(pestañadisciplinas)
+framecontenidodis.pack(fill="both", expand=True, padx=15, pady=15)
+
+# Columna izquierda: formulario y botones 
+frameizquierdadis = tk.Frame(framecontenidodis)
+frameizquierdadis.pack(side="left", anchor="n", padx=10)
+
+# Título azul de la sección
+tk.Label(frameizquierdadis, text="Disciplinas", font=("Segoe UI", 16, "bold"), fg=AZUL).pack(anchor="w", pady=(0, 10))
+
+# Nombre de la disciplina
+tk.Label(frameizquierdadis, text="Nombre de la disciplina", font=("Segoe UI", 9)).pack(anchor="w", pady=2)
+entry_dis_nombre = tk.Entry(frameizquierdadis, **estiloentry)
+entry_dis_nombre.pack(pady=(2, 8), ipady=4, fill="x")
+
+# Modalidad
+tk.Label(frameizquierdadis, text="Modalidad", font=("Segoe UI", 9)).pack(anchor="w", pady=2)
+entry_dis_modalidad = tk.Entry(frameizquierdadis, **estiloentry)
+entry_dis_modalidad.pack(pady=(2, 8), ipady=4, fill="x")
+
+# Botones
+framebotonesdis = tk.Frame(frameizquierdadis)
+framebotonesdis.pack(pady=15)
+
+btncreardis = tk.Button(framebotonesdis, text="Crear", bg=AZUL, fg="white", relief="flat", width=9, command=accionregistrardis)
+btncreardis.grid(row=0, column=0, padx=3)
+
+btneliminardis = tk.Button(framebotonesdis, text="Eliminar", width=9, bg="white", relief="solid", bd=1, command=accioneliminardis)
+btneliminardis.grid(row=0, column=1, padx=3)
+
+# Columna derecha
+framederechadis = tk.Frame(framecontenidodis)
+framederechadis.pack(side="left", anchor="n", padx=25)
+
+tk.Label(framederechadis, text="Disciplinas registradas", font=("Segoe UI", 11, "bold"),
+         bg="#E3ECF5", fg=AZUL, anchor="w", padx=12, pady=10).pack(fill="x")
+
+listboxresultadosdis = tk.Listbox(framederechadis, width=48, height=14, bd=0, highlightthickness=1,
+highlightbackground="#C9D3DE", activestyle="none",
+font=("Segoe UI", 10), selectbackground="#CFE0F1",
+selectforeground=AZUL)
+listboxresultadosdis.pack(pady=5)
 
 
 ventana.mainloop()
