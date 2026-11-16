@@ -2,12 +2,17 @@ import tkinter as tk
 from tkinter import ttk, messagebox
 from Universidades import (registraruniversidad, actualizaruniversidades, borraruniversidad, enumeraruniversidades)
 from Deportistas import (registrardeportista,actualizardeportista,borrardeportista,enumerardeportistas)
-
+from Disciplinas import (registrardisciplina,borrardisciplina,enumerardisciplinas)
+from Inscripciones import (inscribir_deportista, eliminar_inscripcion, listar_inscripciones_por_disciplina)
+from Resultados import (registrar_resultado, eliminar_resultado, listar_resultados)
+from Consultas import (consultar_medallero, consultar_universidad_ganadora, consultar_deportistas_participantes, consultar_estadisticas_generales)
 AZUL="#1F4E79"
 
 listauniversidades = []
 listadeportistas= []
 listainscripciones= []
+listadisciplinas = []
+listaresultados = []
 
 #Funciones Universidades--------------------------------------------------------------------
 
@@ -161,8 +166,154 @@ def limpiarcamposdep():
     entry_dep_doc.delete(0, tk.END)
     entry_dep_univ.delete(0, tk.END)
 
+#Funciones Disciplinas-------------------------------------------------------------
+
+# NUEVO: Funciones Disciplinas
+
+# Botón CREAR: lee los campos, llama a registrardisciplina y muestra el resultado
+def accionregistrardis():
+    # .get() lee lo que hay escrito en los Entry en ese momento
+    nombre = entry_dis_nombre.get()
+    modalidad = entry_dis_modalidad.get()
+
+    # La función devuelve dos cosas: True/False y un mensaje. Las guardamos en exito y mensaje
+    exito, mensaje = registrardisciplina(nombre, modalidad, listadisciplinas)
+
+    if exito == True:
+        messagebox.showinfo("Éxito", mensaje)
+        limpiarcamposdis()
+        accionlistardis()
+    else:
+        messagebox.showerror("Error", mensaje)
+
+
+# Botón ELIMINAR: borra la disciplina cuyo nombre está escrito en la caja
+def accioneliminardis():
+    nombre = entry_dis_nombre.get()
+
+    # borrardisciplina revisa que no tenga inscripciones ni resultados antes de eliminar
+    exito, mensaje = borrardisciplina(nombre, listadisciplinas, listainscripciones, listaresultados)
+
+    if exito == True:
+        messagebox.showinfo("Éxito", mensaje)
+        limpiarcamposdis()
+        accionlistardis()
+    else:
+        messagebox.showerror("Error", mensaje)
+
+
+# Borra el Listbox y lo vuelve a llenar con las disciplinas registradas
+def accionlistardis():
+    listboxresultadosdis.delete(0, tk.END)
+
+    # enumerardisciplinas devuelve textos tipo "1. Natación | Individual"
+    resultados = enumerardisciplinas(listadisciplinas)
+
+    # Recorremos por índice, insertamos cada texto y alternamos el color de las filas
+    for i in range(len(resultados)):
+        texto = resultados[i]
+        listboxresultadosdis.insert(tk.END, texto)
+
+        if i % 2 == 0:
+            listboxresultadosdis.itemconfig(i, bg="white")
+        else:
+            listboxresultadosdis.itemconfig(i, bg="#EEF3F8")
+
+
+def limpiarcamposdis():
+    entry_dis_nombre.delete(0, tk.END)
+    entry_dis_modalidad.delete(0, tk.END)
 
 #-----------------------------------------------------------------------------------
+#Funciones Inscripciones------------------------------------------------------------
+
+def accioninscribir():
+    documento = entry_insc_doc.get()
+    disciplina = entry_insc_disc.get()
+    exito, mensaje = inscribir_deportista(listainscripciones, listadeportistas, listadisciplinas, documento, disciplina)
+    if exito == True:
+        messagebox.showinfo("Éxito", mensaje)
+        accionlistarinscripciones()
+    else:
+        messagebox.showerror("Error", mensaje)
+
+
+def accioneliminarinscripcion():
+    documento = entry_insc_doc.get()
+    disciplina = entry_insc_disc.get()
+    exito, mensaje = eliminar_inscripcion(listainscripciones, documento, disciplina)
+    if exito == True:
+        messagebox.showinfo("Éxito", mensaje)
+        accionlistarinscripciones()
+    else:
+        messagebox.showerror("Error", mensaje)
+
+
+def accionlistarinscripciones():
+    listboxresultadosinsc.delete(0, tk.END)
+    resultados = listar_inscripciones_por_disciplina(listainscripciones, listadeportistas, entry_insc_disc.get())
+    for i in range(len(resultados)):
+        listboxresultadosinsc.insert(tk.END, resultados[i])
+        if i % 2 == 0:
+            listboxresultadosinsc.itemconfig(i, bg="white")
+        else:
+            listboxresultadosinsc.itemconfig(i, bg="#EEF3F8")
+
+
+def accionregistrarresultado():
+    exito, mensaje = registrar_resultado(listaresultados, listadisciplinas, listauniversidades, entry_res_disc.get(), entry_res_univ.get(), entry_res_pos.get())
+    if exito == True:
+        messagebox.showinfo("Éxito", mensaje)
+        accionlistarresultados()
+    else:
+        messagebox.showerror("Error", mensaje)
+
+
+def accioneliminarresultado():
+    exito, mensaje = eliminar_resultado(listaresultados, entry_res_disc.get(), entry_res_univ.get())
+    if exito == True:
+        messagebox.showinfo("Éxito", mensaje)
+        accionlistarresultados()
+    else:
+        messagebox.showerror("Error", mensaje)
+
+
+def accionlistarresultados():
+    listboxresultadosres.delete(0, tk.END)
+    resultados = listar_resultados(listaresultados, entry_res_disc.get())
+    for i in range(len(resultados)):
+        listboxresultadosres.insert(tk.END, resultados[i])
+        if i % 2 == 0:
+            listboxresultadosres.itemconfig(i, bg="white")
+        else:
+            listboxresultadosres.itemconfig(i, bg="#EEF3F8")
+
+
+def mostrarresultadosconsulta(resultados):
+    listboxconsultas.delete(0, tk.END)
+    for i in range(len(resultados)):
+        listboxconsultas.insert(tk.END, resultados[i])
+        if i % 2 == 0:
+            listboxconsultas.itemconfig(i, bg="white")
+        else:
+            listboxconsultas.itemconfig(i, bg="#EEF3F8")
+
+
+def accionconsultarmedallero():
+    mostrarresultadosconsulta(consultar_medallero(listauniversidades, listaresultados))
+
+
+def accionconsultarganadora():
+    mostrarresultadosconsulta(consultar_universidad_ganadora(listauniversidades, listaresultados))
+
+
+def accionconsultardeportistas():
+    mostrarresultadosconsulta(consultar_deportistas_participantes(listadeportistas, listauniversidades, listainscripciones))
+
+
+def accionconsultarestadisticas():
+    mostrarresultadosconsulta(consultar_estadisticas_generales(listauniversidades, listadeportistas, listadisciplinas, listainscripciones, listaresultados))
+
 #------Ventana y elementos-------
 ventana = tk.Tk()
 ventana.title ("Copa Loyola - Sistema de Gestión Deportiva")
@@ -310,6 +461,126 @@ font=("Segoe UI", 10), selectbackground="#CFE0F1",
 selectforeground=AZUL)
 listboxresultadosdep.pack(pady=5)
 
+#Ventana Disciplinas------------------------------------------------------
 
 
+pestañadisciplinas = ttk.Frame(notebook)
+notebook.add(pestañadisciplinas, text=" Disciplinas ")
+
+# Contenedor interno: deja un margen alrededor de todo el contenido
+framecontenidodis = tk.Frame(pestañadisciplinas)
+framecontenidodis.pack(fill="both", expand=True, padx=15, pady=15)
+
+# Columna izquierda: formulario y botones 
+frameizquierdadis = tk.Frame(framecontenidodis)
+frameizquierdadis.pack(side="left", anchor="n", padx=10)
+
+# Título azul de la sección
+tk.Label(frameizquierdadis, text="Disciplinas", font=("Segoe UI", 16, "bold"), fg=AZUL).pack(anchor="w", pady=(0, 10))
+
+# Nombre de la disciplina
+tk.Label(frameizquierdadis, text="Nombre de la disciplina", font=("Segoe UI", 9)).pack(anchor="w", pady=2)
+entry_dis_nombre = tk.Entry(frameizquierdadis, **estiloentry)
+entry_dis_nombre.pack(pady=(2, 8), ipady=4, fill="x")
+
+# Modalidad
+tk.Label(frameizquierdadis, text="Modalidad", font=("Segoe UI", 9)).pack(anchor="w", pady=2)
+entry_dis_modalidad = tk.Entry(frameizquierdadis, **estiloentry)
+entry_dis_modalidad.pack(pady=(2, 8), ipady=4, fill="x")
+
+# Botones
+framebotonesdis = tk.Frame(frameizquierdadis)
+framebotonesdis.pack(pady=15)
+
+btncreardis = tk.Button(framebotonesdis, text="Crear", bg=AZUL, fg="white", relief="flat", width=9, command=accionregistrardis)
+btncreardis.grid(row=0, column=0, padx=3)
+
+btneliminardis = tk.Button(framebotonesdis, text="Eliminar", width=9, bg="white", relief="solid", bd=1, command=accioneliminardis)
+btneliminardis.grid(row=0, column=1, padx=3)
+
+# Columna derecha
+framederechadis = tk.Frame(framecontenidodis)
+framederechadis.pack(side="left", anchor="n", padx=25)
+
+tk.Label(framederechadis, text="Disciplinas registradas", font=("Segoe UI", 11, "bold"),
+         bg="#E3ECF5", fg=AZUL, anchor="w", padx=12, pady=10).pack(fill="x")
+
+listboxresultadosdis = tk.Listbox(framederechadis, width=48, height=14, bd=0, highlightthickness=1,
+highlightbackground="#C9D3DE", activestyle="none",
+font=("Segoe UI", 10), selectbackground="#CFE0F1",
+selectforeground=AZUL)
+listboxresultadosdis.pack(pady=5)
+
+
+#Ventana Inscripciones-----------------------------------------------------
+
+pestañainscripciones = ttk.Frame(notebook)
+notebook.add(pestañainscripciones, text=" Inscripciones ")
+framecontenidoinsc = tk.Frame(pestañainscripciones)
+framecontenidoinsc.pack(fill="both", expand=True, padx=15, pady=15)
+frameizquierdainsc = tk.Frame(framecontenidoinsc)
+frameizquierdainsc.pack(side="left", anchor="n", padx=10)
+tk.Label(frameizquierdainsc, text="Inscripciones", font=("Segoe UI", 16, "bold"), fg=AZUL).pack(anchor="w", pady=(0, 10))
+tk.Label(frameizquierdainsc, text="Documento del deportista", font=("Segoe UI", 9)).pack(anchor="w", pady=2)
+entry_insc_doc = tk.Entry(frameizquierdainsc, **estiloentry)
+entry_insc_doc.pack(pady=(2, 8), ipady=4, fill="x")
+tk.Label(frameizquierdainsc, text="Disciplina", font=("Segoe UI", 9)).pack(anchor="w", pady=2)
+entry_insc_disc = tk.Entry(frameizquierdainsc, **estiloentry)
+entry_insc_disc.pack(pady=(2, 8), ipady=4, fill="x")
+framebotonesinsc = tk.Frame(frameizquierdainsc)
+framebotonesinsc.pack(pady=15)
+tk.Button(framebotonesinsc, text="Inscribir", bg=AZUL, fg="white", relief="flat", width=9, command=accioninscribir).grid(row=0, column=0, padx=3)
+tk.Button(framebotonesinsc, text="Listar", width=9, bg="white", relief="solid", bd=1, command=accionlistarinscripciones).grid(row=0, column=1, padx=3)
+tk.Button(framebotonesinsc, text="Eliminar", width=9, bg="white", relief="solid", bd=1, command=accioneliminarinscripcion).grid(row=0, column=2, padx=3)
+framederechainsc = tk.Frame(framecontenidoinsc)
+framederechainsc.pack(side="left", anchor="n", padx=25)
+tk.Label(framederechainsc, text="Inscripciones por disciplina", font=("Segoe UI", 11, "bold"), bg="#E3ECF5", fg=AZUL, anchor="w", padx=12, pady=10).pack(fill="x")
+listboxresultadosinsc = tk.Listbox(framederechainsc, width=48, height=14, bd=0, highlightthickness=1, highlightbackground="#C9D3DE", activestyle="none", font=("Segoe UI", 10), selectbackground="#CFE0F1", selectforeground=AZUL)
+listboxresultadosinsc.pack(pady=5)
+
+#Ventana Resultados---------------------------------------------------------
+pestañresultados = ttk.Frame(notebook)
+notebook.add(pestañresultados, text=" Resultados ")
+framecontenidores = tk.Frame(pestañresultados)
+framecontenidores.pack(fill="both", expand=True, padx=15, pady=15)
+frameizquierdares = tk.Frame(framecontenidores)
+frameizquierdares.pack(side="left", anchor="n", padx=10)
+tk.Label(frameizquierdares, text="Resultados", font=("Segoe UI", 16, "bold"), fg=AZUL).pack(anchor="w", pady=(0, 10))
+tk.Label(frameizquierdares, text="Disciplina", font=("Segoe UI", 9)).pack(anchor="w", pady=2)
+entry_res_disc = tk.Entry(frameizquierdares, **estiloentry)
+entry_res_disc.pack(pady=(2, 8), ipady=4, fill="x")
+tk.Label(frameizquierdares, text="Universidad", font=("Segoe UI", 9)).pack(anchor="w", pady=2)
+entry_res_univ = tk.Entry(frameizquierdares, **estiloentry)
+entry_res_univ.pack(pady=(2, 8), ipady=4, fill="x")
+tk.Label(frameizquierdares, text="Posición (Oro, Plata o Bronce)", font=("Segoe UI", 9)).pack(anchor="w", pady=2)
+entry_res_pos = tk.Entry(frameizquierdares, **estiloentry)
+entry_res_pos.pack(pady=(2, 8), ipady=4, fill="x")
+framebotonesres = tk.Frame(frameizquierdares)
+framebotonesres.pack(pady=15)
+tk.Button(framebotonesres, text="Registrar", bg=AZUL, fg="white", relief="flat", width=9, command=accionregistrarresultado).grid(row=0, column=0, padx=3)
+tk.Button(framebotonesres, text="Listar", width=9, bg="white", relief="solid", bd=1, command=accionlistarresultados).grid(row=0, column=1, padx=3)
+tk.Button(framebotonesres, text="Eliminar", width=9, bg="white", relief="solid", bd=1, command=accioneliminarresultado).grid(row=0, column=2, padx=3)
+framederechares = tk.Frame(framecontenidores)
+framederechares.pack(side="left", anchor="n", padx=25)
+tk.Label(framederechares, text="Resultados por disciplina", font=("Segoe UI", 11, "bold"), bg="#E3ECF5", fg=AZUL, anchor="w", padx=12, pady=10).pack(fill="x")
+listboxresultadosres = tk.Listbox(framederechares, width=48, height=14, bd=0, highlightthickness=1, highlightbackground="#C9D3DE", activestyle="none", font=("Segoe UI", 10), selectbackground="#CFE0F1", selectforeground=AZUL)
+listboxresultadosres.pack(pady=5)
+
+#Ventana Consultas---------------------------------------------------------
+pestañaconsultas = ttk.Frame(notebook)
+notebook.add(pestañaconsultas, text=" Consultas ")
+framecontenidoconsultas = tk.Frame(pestañaconsultas)
+framecontenidoconsultas.pack(fill="both", expand=True, padx=15, pady=15)
+frameizquierdaconsultas = tk.Frame(framecontenidoconsultas)
+frameizquierdaconsultas.pack(side="left", anchor="n", padx=10)
+tk.Label(frameizquierdaconsultas, text="Consultas", font=("Segoe UI", 16, "bold"), fg=AZUL).pack(anchor="w", pady=(0, 10))
+tk.Button(frameizquierdaconsultas, text="Medallero", bg=AZUL, fg="white", relief="flat", width=25, command=accionconsultarmedallero).pack(anchor="w", pady=5)
+tk.Button(frameizquierdaconsultas, text="Universidad Ganadora", width=25, bg="white", relief="solid", bd=1, command=accionconsultarganadora).pack(anchor="w", pady=5)
+tk.Button(frameizquierdaconsultas, text="Deportistas Participantes", width=25, bg="white", relief="solid", bd=1, command=accionconsultardeportistas).pack(anchor="w", pady=5)
+tk.Button(frameizquierdaconsultas, text="Estadísticas Generales", width=25, bg="white", relief="solid", bd=1, command=accionconsultarestadisticas).pack(anchor="w", pady=5)
+framederechaconsultas = tk.Frame(framecontenidoconsultas)
+framederechaconsultas.pack(side="left", anchor="n", padx=25)
+tk.Label(framederechaconsultas, text="Resultados de la consulta", font=("Segoe UI", 11, "bold"), bg="#E3ECF5", fg=AZUL, anchor="w", padx=12, pady=10).pack(fill="x")
+listboxconsultas = tk.Listbox(framederechaconsultas, width=60, height=19, bd=0, highlightthickness=1, highlightbackground="#C9D3DE", activestyle="none", font=("Segoe UI", 10), selectbackground="#CFE0F1", selectforeground=AZUL)
+listboxconsultas.pack(pady=5)
 ventana.mainloop()
