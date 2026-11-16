@@ -30,7 +30,7 @@ def registraruniversidad(nombre, pais, ciudad, tipo, listauniversidades):
     #Validar que no hayan duplicados
     duplicado=False
     for i in range (len(listauniversidades)):
-        if listauniversidades[i]["nombre"].lower().strip() == nombre.lower().strip:
+        if listauniversidades[i]["nombre"].lower().strip() == nombre.lower().strip():
             duplicado=True
 
     if duplicado==True:
