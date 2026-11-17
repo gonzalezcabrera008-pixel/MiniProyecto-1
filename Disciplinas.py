@@ -73,17 +73,6 @@ def borrardisciplina(nombrebuscar, listadisciplinas, listainscripciones, listare
     if len(nombrebuscar)==0:
         return False, "El campo de búsqueda no puede estar vacío."
 
-    #Buscar la posición de la disciplina (sin borrar todavía)
-    encontrado = False
-    posicion= 0
-    for i in range(len(listadisciplinas)):
-        if listadisciplinas[i]["nombre"].lower() == nombrebuscar.lower():
-            encontrado = True
-            posicion= i
-            
-    if encontrado == False:
-        return False, "La disciplina no está registrada."
-
     #Validar que no tenga inscripciones
     for j in range(len(listainscripciones)):
         if listainscripciones[j]["disciplina"].lower() == nombrebuscar.lower():
@@ -93,6 +82,11 @@ def borrardisciplina(nombrebuscar, listadisciplinas, listainscripciones, listare
     for k in range(len(listaresultados)):
         if listaresultados[k]["disciplina"].lower() == nombrebuscar.lower():
             return False, "No se puede eliminar: la disciplina tiene resultados registrados."
+    
+   
+    for i in range(len(listadisciplinas)):
+        if listadisciplinas[i]["nombre"].lower() == nombrebuscar.lower():
+            listadisciplinas.pop(i)
+            return True, "Disciplina eliminada con éxito."
 
-    listadisciplinas.pop(i)
-    return True, "Disciplina eliminada con éxito."
+    return False, "La disciplina no está registrada."
