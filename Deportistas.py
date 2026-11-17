@@ -28,9 +28,9 @@ def registrardeportista(nombre, tipodoc, documento, universidad, listadeportista
     if existe == False:
         return False, "La universidad no está registrada."
 
-    #Validar que no hayan duplicados (mismo tipo y número de documento)
+    #Validar que no hayan duplicados (mismo número de documento)
     for i in range(len(listadeportistas)):
-        if listadeportistas[i]["tipodoc"] == tipodoc and listadeportistas[i]["documento"] == documento:
+        if listadeportistas[i]["documento"] == documento:
             return False, "Ya existe un deportista registrado con ese documento."
 
     #Registro deportista nuevo

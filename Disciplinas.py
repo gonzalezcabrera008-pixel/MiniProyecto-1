@@ -64,6 +64,8 @@ def enumerardisciplinas(listadisciplinas):
 
 #Diagrama de flujo D3.3
 
+
+
 def borrardisciplina(nombrebuscar, listadisciplinas, listainscripciones, listaresultados):
 
     nombrebuscar = nombrebuscar.strip()
@@ -73,12 +75,12 @@ def borrardisciplina(nombrebuscar, listadisciplinas, listainscripciones, listare
 
     #Buscar la posición de la disciplina (sin borrar todavía)
     encontrado = False
-    posicion = -1
+    posicion= 0
     for i in range(len(listadisciplinas)):
         if listadisciplinas[i]["nombre"].lower() == nombrebuscar.lower():
             encontrado = True
-            posicion = i
-
+            posicion= i
+            
     if encontrado == False:
         return False, "La disciplina no está registrada."
 
@@ -92,5 +94,5 @@ def borrardisciplina(nombrebuscar, listadisciplinas, listainscripciones, listare
         if listaresultados[k]["disciplina"].lower() == nombrebuscar.lower():
             return False, "No se puede eliminar: la disciplina tiene resultados registrados."
 
-    listadisciplinas.pop(posicion)
+    listadisciplinas.pop(i)
     return True, "Disciplina eliminada con éxito."
