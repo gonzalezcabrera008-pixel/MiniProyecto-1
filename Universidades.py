@@ -3,11 +3,9 @@
 #entradas: para cada universidad nombre, país, ciudad y tipo de participación (nacional o internacional)
 #salidas: True si todo salio bien, de lo contrario False junto con mensaje especificando el error
 
-#Procedimiento: Primero validar que los campos esten llenos, cuenta cuantas letras hay en cada uno, si es igual a 0 retorna false y un 
-#mensaje de error. Luego valida que no hayan duplicados. Comienza contando cuantas universidades hay y en ese rango entra en cada 
-#diccionario con la llave "nombre" compara si es igual o no al nuevo nombre a registrar y guarda true en duplicado si esta duplicado, 
-#si duplicado es igual a true entonces retorna false y el mensaje de error
-#Si todo sale bien llega al final del codigo y guarda cada dato en la lista. 
+#procedimiento: Primero validar que los campos estén llenos y que el tipo de participación sea nacional o internacional.
+#Luego recorrer la lista de universidades y comparar el nombre para evitar duplicados. Si todo sale bien, guardar los datos
+#de la nueva universidad en la lista y retornar True con el mensaje de éxito.
 
 #Diagrama de flujo, D1.1
 
@@ -30,7 +28,7 @@ def registraruniversidad(nombre, pais, ciudad, tipo, listauniversidades):
     #Validar que no hayan duplicados
     duplicado=False
     for i in range (len(listauniversidades)):
-        if listauniversidades[i]["nombre"].lower().strip() == nombre.lower().strip:
+        if listauniversidades[i]["nombre"].lower().strip() == nombre.lower().strip():
             duplicado=True
 
     if duplicado==True:
@@ -41,7 +39,6 @@ def registraruniversidad(nombre, pais, ciudad, tipo, listauniversidades):
     listauniversidades.append(nuevauniversidad)
     return True, "Universidad registrada con éxito"
 
-#-------------------------------------------------------------------------------
 #entradas: lista universidades
 #salidas: lista de universidades con formato diferente para mostrar en la interfaz
 #procedimiento: crear lista nueva, para i en el rango de la cantidad de universidades, coger universidad por universidad, individualmente 
@@ -65,13 +62,10 @@ def enumeraruniversidades(listauniversidades):
 lista=[{"nombre": "Javeriana","pais": "Colombia","ciudad": "Cali","tipo" : "Nacional"}]
 #print (enumeraruniversidades(lista))
  
- #----------------------------------------------------------------------------------
- #entradas: nombre a buscar, datos a cambiar (pais, ciudad,tipo)
- #salidas: true o false mensaje respectivo de exito o error
- #proceedimiento: pasar por parametro entradas, al igual que el registro validar espacios para que no cuenten y pasen como si hubiera algo escrito
- #en los campos, evitar que queden campos vacios, si sucede lanzar error, luego validar que se escriba uno de los dos tipos. 
- #Pasar a buscar si existe el nombre de la universidad que se quiere actualizar, si nombre en lista es igual a nombre buscar entonces actualizar datos.
- #Si se logra actualizar retornar true, mensaje de exito. De lo contrario False, Mensaje error.
+#entradas: nombre de la universidad a buscar, nuevo país, nueva ciudad, nuevo tipo y lista de universidades
+#salidas: True y mensaje de éxito si actualiza, o False y mensaje de error
+#procedimiento: validar los campos y el tipo de participación. Recorrer la lista buscando el nombre de la universidad.
+#Si se encuentra, actualizar país, ciudad y tipo. Si no se encuentra, retornar False con el mensaje de error.
 
 #Diagrama de flujo D1.3
 def actualizaruniversidades(nombrebuscar, npais, nciudad, ntipo, listauniversidades):
@@ -93,14 +87,13 @@ def actualizaruniversidades(nombrebuscar, npais, nciudad, ntipo, listauniversida
     actualizado=False
     for i in range(len(listauniversidades)):
         #comparar nombre actual con el que buscamos
-        if listauniversidades[i]["nombre"].lower().strip()==nombrebuscar.lower().strip():
+        if actualizado == False and listauniversidades[i]["nombre"].lower().strip()==nombrebuscar.lower().strip():
             #Actualizamos campos dentro de la posicion
             univact=listauniversidades[i]
             univact["pais"]=npais
             univact["ciudad"]=nciudad
             univact["tipo"]=ntipo
             actualizado=True
-            break
 
     if actualizado == True:
         return True, "Universidad actualizada con éxito."
@@ -108,12 +101,10 @@ def actualizaruniversidades(nombrebuscar, npais, nciudad, ntipo, listauniversida
         return False, "La universidad no esta registrada."
     
 
-#---------------------------------------------------------------------------
 #entradas: nombre de la universidad que se desea eliminar
 #salidas: true y mensaje de exito, false y mensaje de error
-#procedimiento: pedir nombre de la universidad a buscar, quitar espacios y mayusculas, verificar que la busqueda no este vacia, recorrer 
-# lista de universidades comparando el nombre a buscar con los registros, si el nombre coincide eliminar, retornar true o false dependiendo
-#del resultado.
+#procedimiento: validar el nombre, recorrer la lista de universidades y buscar la coincidencia. Si se encuentra,
+#revisar que no tenga deportistas asociados. Si no tiene deportistas, eliminarla y retornar True.
 
 #Diagrama de flujo D1.4
 
@@ -128,16 +119,14 @@ def borraruniversidad(nombrebuscar, listauniversidades,listadeportistas):
     eliminado=False
     for i in range (len(listauniversidades)):
         #buscar si nombre actual es igual a nombre a buscar, quitando mayusculas y espacios para evitar errores
-        if listauniversidades[i]["nombre"].strip().lower()==nombrebuscar.strip().lower():
+        if eliminado == False and listauniversidades[i]["nombre"].strip().lower()==nombrebuscar.strip().lower():
             for j in range(len(listadeportistas)):
                 if listadeportistas[j]["universidad"].lower() == nombrebuscar:
                     return False, "No se puede eliminar: la universidad tiene deportistas"
             #Borrar diccionario en el que estamos parados (i)
             listauniversidades.pop(i)
             eliminado=True
-            break
     if eliminado==True:
             return True, "La universidad fue elimninada con éxito."
     else:
             return False, "No se pudo completar la operación."
-        

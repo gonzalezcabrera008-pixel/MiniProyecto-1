@@ -32,7 +32,7 @@ def buscar_disciplina(listadisciplinas, nombre):
 
 #entradas: lista de inscripciones, documento y disciplina a buscar
 #salidas: posición de la inscripción o -1 si no existe
-#procedimiento: recorrer la matriz por índices y comparar las llaves "documento" y "disciplina".
+#procedimiento: recorrer la lista de inscripciones por índices y comparar las llaves "documento" y "disciplina".
 def buscar_inscripcion(listainscripciones, documento, disciplina):
     encontrado = False
     posicion = -1

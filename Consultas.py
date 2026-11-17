@@ -1,6 +1,7 @@
 #entradas: lista de universidades y resultados
 #salidas: lista con medallas de oro, plata y bronce de cada universidad
 #procedimiento: recorrer universidades y resultados por índices para contar las medallas de cada una.
+
 def consultar_medallero(listauniversidades, listaresultados):
     textos = []
 
@@ -30,6 +31,7 @@ def consultar_medallero(listauniversidades, listaresultados):
 #entradas: lista de universidades y resultados
 #salidas: clasificación general y nombre de la universidad o universidades ganadoras
 #procedimiento: contar puntos y medallas, ordenar manualmente por puntos, oros, platas y bronces, e informar los empates del primer puesto.
+
 def consultar_universidad_ganadora(listauniversidades, listaresultados):
     nombres = []
     puntos = []
@@ -115,6 +117,7 @@ def consultar_universidad_ganadora(listauniversidades, listaresultados):
 #entradas: listas de deportistas, universidades e inscripciones
 #salidas: textos con nombre del deportista, universidad, país y disciplinas en las que participa
 #procedimiento: recorrer deportistas, buscar el país de su universidad y unir las disciplinas de sus inscripciones.
+
 def consultar_deportistas_participantes(listadeportistas, listauniversidades, listainscripciones):
     textos = []
 
@@ -147,6 +150,7 @@ def consultar_deportistas_participantes(listadeportistas, listauniversidades, li
 #entradas: listas de universidades, deportistas, disciplinas, inscripciones y resultados
 #salidas: estadísticas generales de la Copa Loyola
 #procedimiento: contar universidades nacionales e internacionales y mostrar el total de registros de cada lista.
+
 def consultar_estadisticas_generales(listauniversidades, listadeportistas, listadisciplinas, listainscripciones, listaresultados):
     nacionales = 0
     internacionales = 0

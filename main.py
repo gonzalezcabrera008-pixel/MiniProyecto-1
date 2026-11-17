@@ -224,7 +224,6 @@ def limpiarcamposdis():
     entry_dis_nombre.delete(0, tk.END)
     entry_dis_modalidad.delete(0, tk.END)
 
-#-----------------------------------------------------------------------------------
 #Funciones Inscripciones------------------------------------------------------------
 
 def accioninscribir():
