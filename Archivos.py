@@ -324,7 +324,16 @@ def guardardatosjson(listauniversidades, listadeportistas, listadisciplinas, lis
             mensaje = "No se pudo guardar " + nombrearchivo + ": " + str(error)
 
     return guardado, mensaje
-    
+if __name__ == "__main__":
+    u = [{"nombre": "Javeriana", "pais": "Colombia", "ciudad": "Cali", "tipo": "Nacional"}]
+    d = [{"nombre": "Ana", "tipodoc": "CC", "documento": "1001", "universidad": "Javeriana"}]
+    s = [{"nombre": "Fútbol", "modalidad": "Equipo"}]
+    n = [{"tipodoc": "CC", "documento": "1001", "disciplina": "Fútbol"}]
+    r = [{"disciplina": "Fútbol", "universidad": "Javeriana", "posicion": "Oro"}]
+    rmalo = [{"disciplina": {"Fútbol"}, "universidad": "Javeriana", "posicion": "Oro"}]
+
+    print("F7 Prueba 1:", guardardatosjson(u, d, s, n, r))
+    print("F7 Prueba 2:", guardardatosjson(u, d, s, n, rmalo))   
 #------------------------------
 # Entradas: listauniversidades, listadeportistas, listadisciplinas, listainscripciones y listaresultados (las 5 listas del sistema,
 # que se van a llenar con lo que haya en el archivo)
@@ -396,6 +405,29 @@ def cargardatosjson(listauniversidades, listadeportistas, listadisciplinas, list
 
     return cargado, mensaje
 
+if __name__ == "__main__":
+    u = [{"nombre": "Javeriana", "pais": "Colombia", "ciudad": "Cali", "tipo": "Nacional"}]
+    d = [{"nombre": "Ana", "tipodoc": "CC", "documento": "1001", "universidad": "Javeriana"}]
+    s = [{"nombre": "Fútbol", "modalidad": "Equipo"}]
+    n = [{"tipodoc": "CC", "documento": "1001", "disciplina": "Fútbol"}]
+    r = [{"disciplina": "Fútbol", "universidad": "Javeriana", "posicion": "Oro"}]
+    lu = []
+    ld = []
+    ls = []
+    ln = []
+    lr = []
+
+    guardardatosjson(u, d, s, n, r)
+    print("F8 Prueba 1:", cargardatosjson(lu, ld, ls, ln, lr))
+    print("   Cantidades:", len(lu), len(ld), len(ls), len(ln), len(lr))
+
+    archivo = open("copa_loyola_datos.json", "w", encoding="utf-8")
+    archivo.write("{ esto no es json")
+    archivo.close()
+    print("F8 Prueba 2:", cargardatosjson(lu, ld, ls, ln, lr))
+    print("   Cantidades:", len(lu), len(ld), len(ls), len(ln), len(lr))
+
+    guardardatosjson(u, d, s, n, r)
 #-----------------------------------
 # Entradas: listauniversidades, listadeportistas, listadisciplinas, listainscripciones y listaresultados (las 5 listas del sistema)
 # Salidas: cuántos registros tiene cada lista
@@ -417,3 +449,13 @@ def contarregistros(listauniversidades, listadeportistas, listadisciplinas, list
                 contadores[i] = contadores[i] + 1
 
     return contadores[0], contadores[1], contadores[2], contadores[3], contadores[4]
+if __name__ == "__main__":
+    u = [{"nombre": "Javeriana"}, {"nombre": "Lima"}]
+    d = [{"documento": "1001"}, {"documento": "1002"}, {"documento": "1003"}]
+    s = [{"nombre": "Fútbol"}]
+    n = [{"documento": "1001"}, {"documento": "1002"}, {"documento": "1003"}, {"documento": "1004"}]
+    r = [{"posicion": "Oro"}, {"posicion": "Plata"}]
+
+    print("Prueba 1:", contarregistros(u, d, s, n, r))
+    print("Prueba 2:", contarregistros([], [], [], [], []))
+    print("Prueba 3:", contarregistros(None, "texto", 5, n, r))
