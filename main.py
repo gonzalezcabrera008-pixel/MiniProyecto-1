@@ -6,6 +6,9 @@ from Disciplinas import (registrardisciplina,borrardisciplina,enumerardisciplina
 from Inscripciones import (inscribir_deportista, eliminar_inscripcion, listar_inscripciones_por_disciplina)
 from Resultados import (registrar_resultado, eliminar_resultado, listar_resultados)
 from Consultas import (consultar_medallero, consultar_universidad_ganadora, consultar_deportistas_participantes, consultar_estadisticas_generales)
+#Zona Reporte Pandas 
+from Reportes import (generar_reporte_pandas, exportar_reporte_csv)
+
 AZUL="#1F4E79"
 
 listauniversidades = []
@@ -313,6 +316,136 @@ def accionconsultardeportistas():
 def accionconsultarestadisticas():
     mostrarresultadosconsulta(consultar_estadisticas_generales(listauniversidades, listadeportistas, listadisciplinas, listainscripciones, listaresultados))
 
+#Zona Reporte Pandas
+# Entradas: ninguna (lee listaresultados en memoria desde main)
+# Salidas: ninguna (abre una ventana Toplevel con la tabla de resultados,
+# la universidad ganadora y botones de acción, o muestra error con messagebox)
+# Procedimientos: 1) Llamar a generar_reporte_pandas(listaresultados).
+# 2) Si retorna False, mostrar el error con messagebox.showerror.
+# 3) Si retorna True, abrir una ventana Toplevel con los títulos, botones
+# "Generar Reporte con Pandas" y "Exportar CSV", una tabla ttk.Treeview
+# llenada por índices desde df_puntos y la línea de universidad ganadora.
+# 4) Confirmar la generación con messagebox.showinfo.
+def accionreportepandas():
+    ok, mensaje, df_puntos, ganadora = generar_reporte_pandas(listaresultados)
+    if ok == False:
+        messagebox.showerror("Error", mensaje)
+        return
+
+    ventana_reporte = tk.Toplevel(ventana)
+    ventana_reporte.title("Reporte: resultados de la Copa Loyola")
+    ventana_reporte.geometry("680x430")
+    ventana_reporte.configure(bg="white")
+
+    contenedor = tk.Frame(ventana_reporte, bg="white")
+    contenedor.pack(fill="both", expand=True, padx=20, pady=15)
+
+    tk.Label(
+        contenedor,
+        text="Reporte: resultados de la Copa Loyola",
+        font=("Segoe UI", 15, "bold"),
+        fg=AZUL,
+        bg="white"
+    ).pack(anchor="w")
+
+    tk.Label(
+        contenedor,
+        text="Agrupación: universidad",
+        font=("Segoe UI", 10),
+        fg="#555555",
+        bg="white"
+    ).pack(anchor="w", pady=(2, 10))
+
+    frame_botones_rep = tk.Frame(contenedor, bg="white")
+    frame_botones_rep.pack(anchor="w", pady=(0, 10))
+
+    # Entradas: ninguna
+    # Salidas: ninguna
+    # Procedimientos: cierra la ventana actual del reporte y vuelve a ejecutar accionreportepandas para refrescar los datos.
+    def accion_actualizar_reporte():
+        ventana_reporte.destroy()
+        accionreportepandas()
+
+    # Entradas: ninguna
+    # Salidas: ninguna
+    # Procedimientos: llama a exportar_reporte_csv(df_puntos) y muestra el resultado con messagebox.
+    def accion_exportar_desde_ventana():
+        ok_csv, msg_csv = exportar_reporte_csv(df_puntos)
+        if ok_csv == True:
+            messagebox.showinfo("Éxito", msg_csv, parent=ventana_reporte)
+        else:
+            messagebox.showerror("Error", msg_csv, parent=ventana_reporte)
+
+    tk.Button(
+        frame_botones_rep,
+        text="Generar Reporte con Pandas",
+        bg=AZUL,
+        fg="white",
+        relief="flat",
+        padx=12,
+        pady=4,
+        command=accion_actualizar_reporte
+    ).grid(row=0, column=0, padx=(0, 8))
+
+    tk.Button(
+        frame_botones_rep,
+        text="Exportar CSV",
+        bg="white",
+        relief="solid",
+        bd=1,
+        padx=12,
+        pady=4,
+        command=accion_exportar_desde_ventana
+    ).grid(row=0, column=1)
+
+    columnas = ("Universidad", "Oro", "Plata", "Bronce", "Puntos")
+    tabla_tree = ttk.Treeview(contenedor, columns=columnas, show="headings", height=10)
+    tabla_tree.heading("Universidad", text="Universidad")
+    tabla_tree.heading("Oro", text="Oro")
+    tabla_tree.heading("Plata", text="Plata")
+    tabla_tree.heading("Bronce", text="Bronce")
+    tabla_tree.heading("Puntos", text="Puntos")
+
+    tabla_tree.column("Universidad", width=250, anchor="w")
+    tabla_tree.column("Oro", width=85, anchor="center")
+    tabla_tree.column("Plata", width=85, anchor="center")
+    tabla_tree.column("Bronce", width=85, anchor="center")
+    tabla_tree.column("Puntos", width=95, anchor="center")
+
+    tabla_tree.tag_configure("par", background="white")
+    tabla_tree.tag_configure("impar", background="#EEF3F8")
+
+    for i in range(len(df_puntos)):
+        fila = df_puntos.iloc[i]
+        valores = (
+            str(fila["Universidad"]),
+            int(fila["Oro"]),
+            int(fila["Plata"]),
+            int(fila["Bronce"]),
+            int(fila["Puntos"])
+        )
+        if i % 2 == 0:
+            tabla_tree.insert("", tk.END, values=valores, tags=("par",))
+        else:
+            tabla_tree.insert("", tk.END, values=valores, tags=("impar",))
+
+    tabla_tree.pack(fill="both", expand=True, pady=(0, 12))
+
+    tk.Label(
+        contenedor,
+        text="Universidad ganadora: " + ganadora,
+        font=("Segoe UI", 11, "bold"),
+        bg="#E3ECF5",
+        fg=AZUL,
+        anchor="w",
+        padx=12,
+        pady=8
+    ).pack(fill="x")
+
+    messagebox.showinfo("Éxito", mensaje, parent=ventana_reporte)
+#Fin Zona Reporte Pandas (Santiago)
+
+
 #------Ventana y elementos-------
 ventana = tk.Tk()
 ventana.title ("Copa Loyola - Sistema de Gestión Deportiva")
@@ -577,6 +710,9 @@ tk.Button(frameizquierdaconsultas, text="Medallero", bg=AZUL, fg="white", relief
 tk.Button(frameizquierdaconsultas, text="Universidad Ganadora", width=25, bg="white", relief="solid", bd=1, command=accionconsultarganadora).pack(anchor="w", pady=5)
 tk.Button(frameizquierdaconsultas, text="Deportistas Participantes", width=25, bg="white", relief="solid", bd=1, command=accionconsultardeportistas).pack(anchor="w", pady=5)
 tk.Button(frameizquierdaconsultas, text="Estadísticas Generales", width=25, bg="white", relief="solid", bd=1, command=accionconsultarestadisticas).pack(anchor="w", pady=5)
+#Zona Reporte Pandas
+tk.Button(frameizquierdaconsultas, text="Generar Reporte con Pandas", bg=AZUL, fg="white", relief="flat", width=25, command=accionreportepandas).pack(anchor="w", pady=5)
+
 framederechaconsultas = tk.Frame(framecontenidoconsultas)
 framederechaconsultas.pack(side="left", anchor="n", padx=25)
 tk.Label(framederechaconsultas, text="Resultados de la consulta", font=("Segoe UI", 11, "bold"), bg="#E3ECF5", fg=AZUL, anchor="w", padx=12, pady=10).pack(fill="x")
