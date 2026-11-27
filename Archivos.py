@@ -1,3 +1,5 @@
+import json
+
 #entradas: listas de universidades
 #salidas: el set con los nombres unicos y una lista con los nombres que se repitieron
 #procedimiento: Recorrer la lista de universidades, parar en cada indice, extraer de la llave nombre, asegurar que haya
@@ -178,15 +180,8 @@ def detectarduplicados(listauniversidades, listadisciplinas, listadeportistas):
 # Procedimientos: Guardar las 5 listas en una matriz junto con sus nombres y las llaves que debe tener cada una. Recorrer con
 # ciclos por índices cada lista, cada elemento y cada llave. Se verifica que cada dato sea una lista, que cada elemento sea un
 # diccionario y que cada llave exista y tenga un texto no vacío. Con la bandera valido se detiene la revisión en el primer
-# error y se retorna el mensaje que indica dónde está; si no hay errores se retorna True.
+# error y se retorna el mensaje que indica dónde está, si no hay errores se retorna True.
 
-# Entradas: listauniversidades, listadeportistas, listadisciplinas, listainscripciones y listaresultados
-# Salidas: tupla (valido, mensaje): True/False según si la estructura es correcta, y un texto que explica el primer problema
-
-# Procedimientos: Guardar las 5 listas en una matriz junto con sus nombres y las llaves que debe tener cada una. Recorrer con
-# ciclos por índices cada lista, cada elemento y cada llave. Se verifica que cada dato sea una lista, que cada elemento sea un
-# diccionario y que cada llave exista y tenga un texto no vacío. Con la bandera valido se detiene la revisión en el primer
-# error y se retorna el mensaje que indica dónde está; si no hay errores se retorna True.
 
 def validarestructuradatos(listauniversidades, listadeportistas, listadisciplinas, listainscripciones, listaresultados):
     # Las 5 listas juntas. La posición i de las tres listas siguientes habla del mismo tipo de dato
@@ -254,3 +249,76 @@ def validarestructuradatos(listauniversidades, listadeportistas, listadisciplina
                                 mensaje = nombrelista + ": en el elemento " + posicion + " la llave '" + llave + "' está vacía."
     return valido, mensaje
 #----------------------------------
+# Entradas: listauniversidades, listadeportistas, listadisciplinas, listainscripciones y listaresultados (las 5 listas del sistema)
+# Salidas: si la estructura es correcta, si hay repetidos, y el texto que explica
+# Procedimientos: Primero se valida la estructura de las 5 listas. Si es inválida se retorna el error y no se buscan repetidos
+# Si es válida se buscan repetidos con detectarduplicados y se retorna su resultado. Esta funcion esta hecha para unir ambas funciones
+
+
+def validarantesdeguardar(listauniversidades, listadeportistas, listadisciplinas, listainscripciones, listaresultados):
+    # revisar que las 5 listas estén bien armadas
+    estructuravalida, mensajeestructura = validarestructuradatos(listauniversidades, listadeportistas, listadisciplinas, listainscripciones, listaresultados)
+
+    hayduplicados = False
+    mensajefinal = mensajeestructura
+    if estructuravalida==False:
+        #devuelve que si hay error (primero que encontro) y no alcanza a revisar que haya duplicados entonces devuelve que no
+        return estructuravalida, hayduplicados, mensajefinal    
+
+    # solo si la estructura es válida se buscan repetidos
+    if estructuravalida == True:
+        hayduplicados, mensajeduplicados = detectarduplicados(listauniversidades, listadisciplinas, listadeportistas)
+        if hayduplicados==True:
+            mensajefinal = mensajeduplicados
+    return estructuravalida, hayduplicados, mensajefinal    
+    
+
+#---------------------------------------------
+
+# Entradas: listauniversidades, listadeportistas, listadisciplinas, listainscripciones y listaresultados (las 5 listas del sistema)
+# Salidas: True si el archivo se guardó, False si hubo un error, y un texto que explica qué pasó
+# Procedimientos: Armar un diccionario con las 5 listas. Primero se convierte a texto JSON en memoria para comprobar que todos los
+# datos se pueden guardar (así, si algo falla, el archivo anterior no se daña). Si se pudo, se abre copa_loyola_datos.json en
+# modo escritura y se guarda con json.dump. Los errores de escritura (sin permiso, archivo bloqueado, disco lleno, etc.) se
+# capturan con try / except y se retornan como mensaje en lugar de detener el programa.
+
+def guardardatosjson(listauniversidades, listadeportistas, listadisciplinas, listainscripciones, listaresultados):
+    nombrearchivo = "copa_loyola_datos.json"
+
+    # Diccionario con toda la información del sistema
+    datos = {
+        "universidades": listauniversidades,
+        "deportistas": listadeportistas,
+        "disciplinas": listadisciplinas,
+        "inscripciones": listainscripciones,
+        "resultados": listaresultados
+    }
+
+    guardado = False
+    mensaje = ""
+
+    # probar la conversión a JSON sin tocar el archivo
+    try:
+        json.dumps(datos)
+        convertible = True
+        #Si hay algo que JSON no entiende (por ejemplo un set), el except captura el error y arma el mensaje.
+    except (TypeError, ValueError) as error:
+        convertible = False
+        mensaje = "Los datos contienen valores que no se pueden guardar en JSON: " + str(error)
+
+    #ssi los datos sirven, guardarlos en el archivo
+    if convertible == True:
+        try:
+            archivo = open(nombrearchivo, "w", encoding="utf-8")     
+            json.dump(datos, archivo, ensure_ascii=False, indent=4)    
+            archivo.close()                                            
+            guardado = True
+            mensaje = "Datos guardados correctamente en " + nombrearchivo
+        except PermissionError:
+            mensaje = "No se pudo guardar: no hay permiso para escribir en " + nombrearchivo + " (puede estar abierto en otro programa o ser de solo lectura)."
+        except OSError as error:
+            mensaje = "No se pudo guardar " + nombrearchivo + ": " + str(error)
+
+    return guardado, mensaje
+    
+#------------------------------
