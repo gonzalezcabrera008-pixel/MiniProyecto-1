@@ -12,6 +12,7 @@ from Reportes import (
     calcular_puntos,
     identificar_universidad_ganadora,
     exportar_reporte_csv,
+    generar_reporte_pandas,
 )
 
 # Entradas: ruta (texto con la ruta de un archivo de texto)
@@ -596,6 +597,78 @@ def probar_exportar_reporte_csv():
         texto = texto + " | " + fallos[i]
     return texto
 
+# Entradas: ninguna
+# Salidas: texto indicando si todas las pruebas de generar_reporte_pandas pasaron
+# Procedimientos: prueba el flujo completo de punta a punta con datos normales
+# desordenados, empate persistente, lista vacía, None, medallas inválidas,
+# llaves faltantes, ruta de exportación inválida y llamada con 1 parámetro.
+def probar_generar_reporte_pandas():
+    fallos = []
+
+    # Caso 1: flujo completo con datos normales (verifica ordenamiento, ganadora y CSV)
+    resultados = [
+        {"disciplina": "Atletismo", "universidad": "Universidad de los Andes", "posicion": "Bronce"},
+        {"disciplina": "Natación", "universidad": "Javeriana Cali", "posicion": "Oro"},
+        {"disciplina": "Atletismo", "universidad": "Javeriana Cali", "posicion": "Plata"},
+        {"disciplina": "Natación", "universidad": "Universidad de Lima", "posicion": "Plata"},
+    ]
+    ok, msg, df_res, ganadora = generar_reporte_pandas(resultados, "prueba_orquesta_ok.csv")
+    lineas = leer_lineas("prueba_orquesta_ok.csv")
+    if ok != True or df_res is None or ganadora != "Javeriana Cali (5 puntos)":
+        fallos.append("caso 1: retorno general o ganadora")
+    elif list(df_res["Universidad"]) != ["Javeriana Cali", "Universidad de Lima", "Universidad de los Andes"]:
+        fallos.append("caso 1: orden de universidades en DataFrame")
+    elif len(lineas) != 4 or lineas[1] != "Javeriana Cali,1,1,0,5":
+        fallos.append("caso 1: contenido del CSV exportado")
+
+    # Caso 2: empate total persistente en el flujo completo
+    resultados_empate = [
+        {"disciplina": "Natación", "universidad": "Javeriana Cali", "posicion": "Oro"},
+        {"disciplina": "Atletismo", "universidad": "Universidad de Lima", "posicion": "Oro"},
+    ]
+    ok, msg, df_res, ganadora = generar_reporte_pandas(resultados_empate, "prueba_orquesta_empate.csv")
+    if ok != True or ganadora != "Empate entre: Javeriana Cali, Universidad de Lima (3 puntos)":
+        fallos.append("caso 2: empate persistente")
+
+    # Caso 3: lista vacía
+    ok, msg, df_res, ganadora = generar_reporte_pandas([], "prueba_x.csv")
+    if ok != False or df_res is not None or ganadora is not None:
+        fallos.append("caso 3: lista vacía")
+
+    # Caso 4: None y tipo incorrecto
+    if generar_reporte_pandas(None, "prueba_x.csv")[0] != False:
+        fallos.append("caso 4a: entrada None")
+    if generar_reporte_pandas("texto", "prueba_x.csv")[0] != False:
+        fallos.append("caso 4b: entrada texto")
+
+    # Caso 5: ninguna medalla válida
+    res_invalidos = [{"disciplina": "Natación", "universidad": "Javeriana Cali", "posicion": "Cobre"}]
+    ok, msg, df_res, ganadora = generar_reporte_pandas(res_invalidos, "prueba_x.csv")
+    if ok != False or df_res is not None or ganadora is not None:
+        fallos.append("caso 5: medallas inválidas")
+
+    # Caso 6: registro corrupto (falta llave)
+    res_corrupto = [{"disciplina": "Natación", "universidad": "Javeriana Cali"}]
+    if generar_reporte_pandas(res_corrupto, "prueba_x.csv")[0] != False:
+        fallos.append("caso 6: falta llave en resultado")
+
+    # Caso 7: falla en la exportación final (ruta inválida)
+    ok, msg, df_res, ganadora = generar_reporte_pandas(resultados, "carpeta_inexistente/reporte.csv")
+    if ok != False or df_res is not None or ganadora is not None:
+        fallos.append("caso 7: ruta inválida en exportación")
+
+    # Caso 8: llamada con 1 solo parámetro (como lo usará main.py)
+    ok, msg, df_res, ganadora = generar_reporte_pandas(resultados)
+    if ok != True or "reporte_copa_loyola.csv" not in msg:
+        fallos.append("caso 8: llamada por defecto con 1 parámetro")
+
+    if len(fallos) == 0:
+        return "Todas las pruebas de generar_reporte_pandas pasaron"
+    texto = "Fallaron:"
+    for i in range(len(fallos)):
+        texto = texto + " | " + fallos[i]
+    return texto
+
 if __name__ == "__main__":
     print(probar_generar_medallero_csv())
     print(probar_crear_dataframe_resultados())
@@ -603,3 +676,4 @@ if __name__ == "__main__":
     print(probar_calcular_puntos())
     print(probar_identificar_universidad_ganadora())
     print(probar_exportar_reporte_csv())
+    print(probar_generar_reporte_pandas())

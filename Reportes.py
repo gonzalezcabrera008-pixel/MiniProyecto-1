@@ -299,6 +299,50 @@ def exportar_reporte_csv(df, ruta="reporte_copa_loyola.csv"):
 
     return True, "Reporte exportado a " + ruta + " con " + str(len(df)) + " universidades."
 
+# Entradas: listaresultados (lista de diccionarios con las llaves "universidad",
+# "disciplina" y "posicion") y ruta (texto, opcional; por defecto
+# "reporte_copa_loyola.csv")
+# Salidas: una tupla de 4 elementos (ok, mensaje, df_puntos, ganadora), donde
+# ok es True/False, mensaje describe el resultado o error, df_puntos es el
+# DataFrame final ordenado (o None si falla) y ganadora es el texto de la
+# universidad ganadora (o None si falla)
+# Procedimientos: 1) Llamar secuencialmente a crear_dataframe_resultados,
+# calcular_medallas_por_universidad y calcular_puntos verificando en cada paso
+# la bandera ok. 2) Ordenar df_puntos descendentemente por Puntos, Oro, Plata
+# y Bronce. 3) Llamar a identificar_universidad_ganadora y exportar_reporte_csv.
+# 4) Retornar (True, mensaje, df_puntos, ganadora) o (False, mensaje, None, None).
+def generar_reporte_pandas(listaresultados, ruta="reporte_copa_loyola.csv"):
+    ok_df, res_df = crear_dataframe_resultados(listaresultados)
+    if ok_df == False:
+        return False, res_df, None, None
+
+    ok_med, res_med = calcular_medallas_por_universidad(res_df)
+    if ok_med == False:
+        return False, res_med, None, None
+
+    ok_pts, res_pts = calcular_puntos(res_med)
+    if ok_pts == False:
+        return False, res_pts, None, None
+
+    try:
+        df_ordenado = res_pts.sort_values(
+            by=["Puntos", "Oro", "Plata", "Bronce"],
+            ascending=False
+        ).reset_index(drop=True)
+    except (KeyError, TypeError, ValueError, AttributeError):
+        return False, "Estructura inválida: no se pudo ordenar la tabla de puntos.", None, None
+
+    ok_gan, res_gan = identificar_universidad_ganadora(df_ordenado)
+    if ok_gan == False:
+        return False, res_gan, None, None
+
+    ok_csv, res_csv = exportar_reporte_csv(df_ordenado, ruta)
+    if ok_csv == False:
+        return False, res_csv, None, None
+
+    mensaje_final = "Reporte generado correctamente. " + res_csv
+    return True, mensaje_final, df_ordenado, res_gan
+
 if __name__ == "__main__":
     universidades_demo = [
         {"nombre": "Javeriana Cali", "pais": "Colombia", "ciudad": "Cali", "tipo": "nacional"},
@@ -326,5 +370,5 @@ if __name__ == "__main__":
             print(identificar_universidad_ganadora(df_pts_demo))
     if ok_df == True and ok_med == True and ok_pts == True:
         print(exportar_reporte_csv(df_pts_demo))
-
+    print(generar_reporte_pandas(resultados_demo))
 
