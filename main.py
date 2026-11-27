@@ -6,8 +6,9 @@ from Disciplinas import (registrardisciplina,borrardisciplina,enumerardisciplina
 from Inscripciones import (inscribir_deportista, eliminar_inscripcion, listar_inscripciones_por_disciplina)
 from Resultados import (registrar_resultado, eliminar_resultado, listar_resultados)
 from Consultas import (consultar_medallero, consultar_universidad_ganadora, consultar_deportistas_participantes, consultar_estadisticas_generales)
-#Zona Reporte Pandas 
 from Reportes import (generar_reporte_pandas, exportar_reporte_csv)
+from Archivos import (validarantesdeguardar, guardardatosjson, cargardatosjson, contarregistros)
+from Reportes import generar_medallero_csv
 
 AZUL="#1F4E79"
 
@@ -445,6 +446,66 @@ def accionreportepandas():
     messagebox.showinfo("Éxito", mensaje, parent=ventana_reporte)
 #Fin Zona Reporte Pandas (Santiago)
 
+#Archivos (Karol)
+def actualizarareainformacion(mensaje):
+    cu, cd, cs, cn, cr = contarregistros(listauniversidades, listadeportistas, listadisciplinas, listainscripciones, listaresultados)
+    lblinfomensaje.config(text=mensaje)
+    lblinfoconteo.config(text="Universidades: " + str(cu) + " | Deportistas: " + str(cd) + "\nDisciplinas: " + str(cs) + " | Inscripciones: " + str(cn) + "\nResultados: " + str(cr))
+
+
+def accionguardar():
+    estructuravalida, hayduplicados, mensajevalidacion = validarantesdeguardar(listauniversidades, listadeportistas, listadisciplinas, listainscripciones, listaresultados)
+
+    if estructuravalida == False:
+        messagebox.showerror("Error", mensajevalidacion)
+        actualizarareainformacion(mensajevalidacion)
+    else:
+        if hayduplicados == True:
+            messagebox.showwarning("Datos repetidos", mensajevalidacion + "\n\nLos datos se guardarán de todos modos.")
+
+        exito, mensaje = guardardatosjson(listauniversidades, listadeportistas, listadisciplinas, listainscripciones, listaresultados)
+
+        if exito == True:
+            exitocsv, mensajecsv = generar_medallero_csv(listauniversidades, listaresultados)
+            if hayduplicados == True:
+                textoinfo = "Datos guardados, con advertencia de datos repetidos."
+            else:
+                textoinfo = "Datos guardados correctamente."
+
+            if exitocsv == True:
+                messagebox.showinfo("Éxito", mensaje + "\n" + mensajecsv)
+                actualizarareainformacion(textoinfo)
+            else:
+                messagebox.showerror("Error", mensaje + "\nPero no se pudo generar el medallero CSV: " + mensajecsv)
+                actualizarareainformacion(textoinfo + " Error en medallero CSV: " + mensajecsv)
+        else:
+            messagebox.showerror("Error", mensaje)
+            actualizarareainformacion(mensaje)
+
+
+def accioncargar():
+    exito, mensaje = cargardatosjson(listauniversidades, listadeportistas, listadisciplinas, listainscripciones, listaresultados)
+
+    if exito == True:
+        messagebox.showinfo("Éxito", mensaje)
+        actualizarareainformacion("Datos cargados correctamente.")
+        accionlistar()
+        accionlistardep()
+        accionlistardis()
+    else:
+        messagebox.showerror("Error", mensaje)
+        actualizarareainformacion(mensaje)
+
+
+def accionmedallerocsv():
+    exito, mensaje = generar_medallero_csv(listauniversidades, listaresultados)
+
+    if exito == True:
+        messagebox.showinfo("Éxito", mensaje)
+        actualizarareainformacion("Medallero CSV generado correctamente.")
+    else:
+        messagebox.showerror("Error", mensaje)
+        actualizarareainformacion(mensaje)
 
 #------Ventana y elementos-------
 ventana = tk.Tk()
@@ -713,6 +774,25 @@ tk.Button(frameizquierdaconsultas, text="Estadísticas Generales", width=25, bg=
 #Zona Reporte Pandas
 tk.Button(frameizquierdaconsultas, text="Generar Reporte con Pandas", bg=AZUL, fg="white", relief="flat", width=25, command=accionreportepandas).pack(anchor="w", pady=5)
 
+#-------------------- Archivos (Karol)
+tk.Frame(frameizquierdaconsultas, height=1, bg="#C9D3DE").pack(fill="x", pady=(12, 8))
+tk.Label(frameizquierdaconsultas, text="Acción de almacenamiento", font=("Segoe UI", 11, "bold"), fg=AZUL).pack(anchor="w")
+tk.Label(frameizquierdaconsultas, text="Archivo: copa_loyola_datos.json", font=("Segoe UI", 9), fg="#555555").pack(anchor="w", pady=(2, 6))
+tk.Button(frameizquierdaconsultas, text="Guardar datos (JSON)", bg=AZUL, fg="white", relief="flat", width=25, command=accionguardar).pack(anchor="w", pady=3)
+tk.Button(frameizquierdaconsultas, text="Cargar datos (JSON)", width=25, bg="white", relief="solid", bd=1, command=accioncargar).pack(anchor="w", pady=3)
+tk.Button(frameizquierdaconsultas, text="Medallero (CSV)", width=25, bg="white", relief="solid", bd=1, command=accionmedallerocsv).pack(anchor="w", pady=3)
+
+tk.Label(frameizquierdaconsultas, text="Información / resultados", font=("Segoe UI", 10, "bold"), fg=AZUL).pack(anchor="w", pady=(12, 4))
+lblinfomensaje = tk.Label(frameizquierdaconsultas, text="", font=("Segoe UI", 9, "bold"), bg="#EEF3F8", fg=AZUL, anchor="w", justify="left", wraplength=260, padx=10, pady=6)
+lblinfomensaje.pack(fill="x")
+lblinfoconteo = tk.Label(frameizquierdaconsultas, text="", font=("Segoe UI", 9), bg="#EEF3F8", anchor="w", justify="left", padx=10, pady=6)
+lblinfoconteo.pack(fill="x")
+actualizarareainformacion("Sin operaciones todavía.")
+
+# Nombre de la pestaña ventana más grande para que quepa la sección nueva
+notebook.tab(pestañaconsultas, text=" Consultas / Archivos / Reportes ")
+ventana.geometry("900x640")
+#---------------------------------------
 framederechaconsultas = tk.Frame(framecontenidoconsultas)
 framederechaconsultas.pack(side="left", anchor="n", padx=25)
 tk.Label(framederechaconsultas, text="Resultados de la consulta", font=("Segoe UI", 11, "bold"), bg="#E3ECF5", fg=AZUL, anchor="w", padx=12, pady=10).pack(fill="x")

@@ -1,0 +1,38 @@
+{
+    "universidades": [
+        {
+            "nombre": "Javeriana",
+            "pais": "Colombia",
+            "ciudad": "Cali",
+            "tipo": "Nacional"
+        }
+    ],
+    "deportistas": [
+        {
+            "nombre": "Ana",
+            "tipodoc": "CC",
+            "documento": "1001",
+            "universidad": "Javeriana"
+        }
+    ],
+    "disciplinas": [
+        {
+            "nombre": "Fútbol",
+            "modalidad": "Equipo"
+        }
+    ],
+    "inscripciones": [
+        {
+            "tipodoc": "CC",
+            "documento": "1001",
+            "disciplina": "Fútbol"
+        }
+    ],
+    "resultados": [
+        {
+            "disciplina": "Fútbol",
+            "universidad": "Javeriana",
+            "posicion": "Oro"
+        }
+    ]
+}
