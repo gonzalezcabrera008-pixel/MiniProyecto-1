@@ -3,7 +3,14 @@
 # entradas vacías, mal formadas, rutas inválidas y nombres con caracteres raros.
 # Ejecutar con:  python pruebas_reportes.py
 import csv
-from Reportes import generar_medallero_csv, crear_dataframe_resultados
+import csv
+import pandas as pd
+from Reportes import (
+    generar_medallero_csv,
+    crear_dataframe_resultados,
+    calcular_medallas_por_universidad,
+    calcular_puntos,
+)
 
 
 # Entradas: ruta (texto con la ruta de un archivo de texto)
@@ -274,7 +281,159 @@ def probar_crear_dataframe_resultados():
         texto = texto + " | " + fallos[i]
     return texto
 
+# Entradas: ninguna
+# Salidas: texto indicando si todas las pruebas pasaron o cuáles fallaron
+# Procedimientos: ejecuta calcular_medallas_por_universidad con casos normales y
+# casos límite (sin plata/bronce, un solo dato, DataFrame vacío, None, tipos
+# erróneos, columnas faltantes, tildes/comas y celdas corruptas) acumulando fallos.
+def probar_calcular_medallas_por_universidad():
+    fallos = []
+
+    # Caso 1: datos normales
+    df_normal = pd.DataFrame([
+        {"Universidad": "Javeriana Cali", "Disciplina": "Natación", "Medalla": "Oro"},
+        {"Universidad": "Javeriana Cali", "Disciplina": "Atletismo", "Medalla": "Plata"},
+        {"Universidad": "Universidad de Lima", "Disciplina": "Natación", "Medalla": "Bronce"},
+    ])
+    ok, res = calcular_medallas_por_universidad(df_normal)
+    if ok != True or list(res.columns) != ["Universidad", "Oro", "Plata", "Bronce"] or len(res) != 2:
+        fallos.append("caso 1: estructura o columnas normales")
+    else:
+        fila_jav = res[res["Universidad"] == "Javeriana Cali"].iloc[0]
+        if int(fila_jav["Oro"]) != 1 or int(fila_jav["Plata"]) != 1 or int(fila_jav["Bronce"]) != 0:
+            fallos.append("caso 1: conteo Javeriana")
+
+    # Caso 2: universidad solo con Oro (no existen filas de Plata ni Bronce)
+    df_solo_oro = pd.DataFrame([
+        {"Universidad": "Javeriana Cali", "Disciplina": "Natación", "Medalla": "Oro"},
+    ])
+    ok, res = calcular_medallas_por_universidad(df_solo_oro)
+    if ok != True or list(res.columns) != ["Universidad", "Oro", "Plata", "Bronce"]:
+        fallos.append("caso 2: reindex sin Plata ni Bronce")
+    elif int(res.iloc[0]["Oro"]) != 1 or int(res.iloc[0]["Plata"]) != 0 or int(res.iloc[0]["Bronce"]) != 0:
+        fallos.append("caso 2: relleno con 0 o tipo int")
+
+    # Caso 3: DataFrame vacío
+    df_vacio = pd.DataFrame(columns=["Universidad", "Disciplina", "Medalla"])
+    ok, msg = calcular_medallas_por_universidad(df_vacio)
+    if ok != False or msg != "No hay resultados para calcular el medallero.":
+        fallos.append("caso 3: DataFrame vacío")
+
+    # Caso 4: None y tipos incorrectos
+    if calcular_medallas_por_universidad(None)[0] != False:
+        fallos.append("caso 4a: entrada None")
+    if calcular_medallas_por_universidad([{"Universidad": "X", "Medalla": "Oro"}])[0] != False:
+        fallos.append("caso 4b: entrada lista en vez de DataFrame")
+    if calcular_medallas_por_universidad("texto")[0] != False:
+        fallos.append("caso 4c: entrada texto")
+
+    # Caso 5: columnas faltantes
+    df_sin_medalla = pd.DataFrame([{"Universidad": "Javeriana Cali", "Disciplina": "Natación"}])
+    ok, msg = calcular_medallas_por_universidad(df_sin_medalla)
+    if ok != False or msg != "Estructura inválida: falta la columna 'Medalla'.":
+        fallos.append("caso 5a: falta columna Medalla")
+
+    df_sin_univ = pd.DataFrame([{"Disciplina": "Natación", "Medalla": "Oro"}])
+    ok, msg = calcular_medallas_por_universidad(df_sin_univ)
+    if ok != False or msg != "Estructura inválida: falta la columna 'Universidad'.":
+        fallos.append("caso 5b: falta columna Universidad")
+
+    # Caso 6: nombres con tildes, eñes y comas
+    df_raros = pd.DataFrame([
+        {"Universidad": 'Universidad, "Lima"', "Disciplina": "Fútbol", "Medalla": "Oro"},
+        {"Universidad": "Universidad Católica del Perú", "Disciplina": "Natación", "Medalla": "Plata"},
+    ])
+    ok, res = calcular_medallas_por_universidad(df_raros)
+    if ok != True or len(res) != 2:
+        fallos.append("caso 6: nombres con tildes y comas")
+
+    # Caso 7: celdas con valores nulos o corruptos
+    df_nulos = pd.DataFrame([{"Universidad": None, "Disciplina": "Natación", "Medalla": None}])
+    if calcular_medallas_por_universidad(df_nulos)[0] != False:
+        fallos.append("caso 7a: filas con None")
+
+    df_corrupto = pd.DataFrame([{"Universidad": ["lista"], "Disciplina": "Natación", "Medalla": "Oro"}])
+    if calcular_medallas_por_universidad(df_corrupto)[0] != False:
+        fallos.append("caso 7b: celda con objeto no hashable")
+
+    if len(fallos) == 0:
+        return "Todas las pruebas de calcular_medallas_por_universidad pasaron"
+    texto = "Fallaron:"
+    for i in range(len(fallos)):
+        texto = texto + " | " + fallos[i]
+    return texto
+
+# Entradas: ninguna
+# Salidas: texto indicando si todas las pruebas de calcular_puntos pasaron
+# Procedimientos: ejecuta calcular_puntos con datos normales, una sola fila,
+# DataFrame vacío, None, tipos incorrectos, columnas faltantes y datos no
+# numéricos en las medallas, acumulando cualquier fallo encontrado.
+def probar_calcular_puntos():
+    fallos = []
+
+    # Caso 1: datos normales
+    df_medallas = pd.DataFrame([
+        {"Universidad": "Javeriana Cali", "Oro": 1, "Plata": 1, "Bronce": 0},
+        {"Universidad": "Universidad de los Andes", "Oro": 0, "Plata": 0, "Bronce": 1},
+        {"Universidad": "Universidad de Chile", "Oro": 0, "Plata": 0, "Bronce": 0},
+    ])
+    ok, res = calcular_puntos(df_medallas)
+    if ok != True or list(res.columns) != ["Universidad", "Oro", "Plata", "Bronce", "Puntos"]:
+        fallos.append("caso 1: columnas de salida")
+    elif int(res.iloc[0]["Puntos"]) != 5 or int(res.iloc[1]["Puntos"]) != 1 or int(res.iloc[2]["Puntos"]) != 0:
+        fallos.append("caso 1: cálculo de puntos")
+
+    # Caso 2: un solo registro y nombres con tildes/comas
+    df_uno = pd.DataFrame([
+        {"Universidad": 'Universidad, "Católica del Perú"', "Oro": 2, "Plata": 1, "Bronce": 3},
+    ])
+    ok, res = calcular_puntos(df_uno)
+    if ok != True or int(res.iloc[0]["Puntos"]) != 11:
+        fallos.append("caso 2: un solo registro o fórmula 2*3 + 1*2 + 3*1")
+
+    # Caso 3: DataFrame vacío
+    df_vacio = pd.DataFrame(columns=["Universidad", "Oro", "Plata", "Bronce"])
+    ok, msg = calcular_puntos(df_vacio)
+    if ok != False or msg != "No hay datos para calcular los puntos.":
+        fallos.append("caso 3: DataFrame vacío")
+
+    # Caso 4: None y tipos incorrectos
+    if calcular_puntos(None)[0] != False:
+        fallos.append("caso 4a: entrada None")
+    if calcular_puntos([{"Universidad": "X", "Oro": 1}])[0] != False:
+        fallos.append("caso 4b: entrada lista")
+    if calcular_puntos("texto")[0] != False:
+        fallos.append("caso 4c: entrada texto")
+
+    # Caso 5: columnas faltantes
+    df_sin_bronce = pd.DataFrame([{"Universidad": "Javeriana Cali", "Oro": 1, "Plata": 0}])
+    ok, msg = calcular_puntos(df_sin_bronce)
+    if ok != False or msg != "Estructura inválida: falta la columna 'Bronce'.":
+        fallos.append("caso 5a: falta columna Bronce")
+
+    df_sin_univ = pd.DataFrame([{"Oro": 1, "Plata": 0, "Bronce": 0}])
+    ok, msg = calcular_puntos(df_sin_univ)
+    if ok != False or msg != "Estructura inválida: falta la columna 'Universidad'.":
+        fallos.append("caso 5b: falta columna Universidad")
+
+    # Caso 6: medallas corruptas (texto no numérico o None)
+    df_texto = pd.DataFrame([{"Universidad": "Javeriana Cali", "Oro": "tres", "Plata": 1, "Bronce": 0}])
+    if calcular_puntos(df_texto)[0] != False:
+        fallos.append("caso 6a: medalla con texto")
+
+    df_nulo = pd.DataFrame([{"Universidad": "Javeriana Cali", "Oro": None, "Plata": 1, "Bronce": 0}])
+    if calcular_puntos(df_nulo)[0] != False:
+        fallos.append("caso 6b: medalla con None")
+
+    if len(fallos) == 0:
+        return "Todas las pruebas de calcular_puntos pasaron"
+    texto = "Fallaron:"
+    for i in range(len(fallos)):
+        texto = texto + " | " + fallos[i]
+    return texto
 
 if __name__ == "__main__":
     print(probar_generar_medallero_csv())
     print(probar_crear_dataframe_resultados())
+    print(probar_calcular_medallas_por_universidad())
+    print(probar_calcular_puntos())

@@ -108,6 +108,80 @@ def crear_dataframe_resultados(listaresultados):
     df = pd.DataFrame({"Universidad": universidades, "Disciplina": disciplinas, "Medalla": medallas})
     return True, df
 
+# Entradas: df (DataFrame de Pandas con al menos las columnas "Universidad" y "Medalla")
+# Salidas: una tupla (True, df_medallas) con el conteo de Oro, Plata y Bronce por
+# universidad como enteros, o (False, mensaje) si hay algún error de estructura
+# Procedimientos: 1) Verificar que la entrada sea un DataFrame y no esté vacío.
+# 2) Comprobar mediante ciclos por índices y banderas que existan las columnas
+# "Universidad" y "Medalla". 3) Agrupar por "Universidad" y "Medalla", contar
+# ocurrencias y reorganizar columnas con reindex para garantizar Oro, Plata y
+# Bronce en entero (rellenando con 0 las faltantes). 4) Controlar errores con try/except.
+def calcular_medallas_por_universidad(df):
+    if type(df) != pd.DataFrame:
+        return False, "Estructura inválida: se esperaba un DataFrame de Pandas."
+
+    if len(df) == 0:
+        return False, "No hay resultados para calcular el medallero."
+
+    columnas_actuales = list(df.columns)
+    requeridas = ["Universidad", "Medalla"]
+    for i in range(len(requeridas)):
+        encontrada = False
+        for j in range(len(columnas_actuales)):
+            if columnas_actuales[j] == requeridas[i]:
+                encontrada = True
+        if encontrada == False:
+            return False, "Estructura inválida: falta la columna '" + requeridas[i] + "'."
+
+    try:
+        tabla = df.groupby(["Universidad", "Medalla"]).size().unstack(fill_value=0)
+        if len(tabla) == 0:
+            return False, "No hay resultados válidos para calcular el medallero."
+        tabla = tabla.reindex(columns=["Oro", "Plata", "Bronce"], fill_value=0)
+        tabla = tabla.astype(int).reset_index()
+        tabla.columns.name = None
+    except (KeyError, TypeError, ValueError, AttributeError):
+        return False, "Estructura inválida: los datos del DataFrame no tienen el formato esperado."
+
+    return True, tabla
+
+# Entradas: df_medallas (DataFrame de Pandas con las columnas "Universidad",
+# "Oro", "Plata" y "Bronce")
+# Salidas: una tupla (True, df_puntos) con la nueva columna "Puntos" calculada
+# como Oro*3 + Plata*2 + Bronce*1, o (False, mensaje) si hay error de estructura
+# Procedimientos: 1) Verificar que la entrada sea un DataFrame y no esté vacío.
+# 2) Validar mediante ciclos por índices y banderas que existan las columnas
+# "Universidad", "Oro", "Plata" y "Bronce". 3) Copiar la tabla, asegurar que
+# las columnas de medallas sean enteros y calcular la columna "Puntos" con
+# operaciones vectorizadas de Pandas. 4) Controlar errores con try/except.
+def calcular_puntos(df_medallas):
+    if type(df_medallas) != pd.DataFrame:
+        return False, "Estructura inválida: se esperaba un DataFrame de Pandas."
+
+    if len(df_medallas) == 0:
+        return False, "No hay datos para calcular los puntos."
+
+    columnas_actuales = list(df_medallas.columns)
+    requeridas = ["Universidad", "Oro", "Plata", "Bronce"]
+    for i in range(len(requeridas)):
+        encontrada = False
+        for j in range(len(columnas_actuales)):
+            if columnas_actuales[j] == requeridas[i]:
+                encontrada = True
+        if encontrada == False:
+            return False, "Estructura inválida: falta la columna '" + requeridas[i] + "'."
+
+    try:
+        tabla = df_medallas.copy()
+        tabla["Oro"] = tabla["Oro"].astype(int)
+        tabla["Plata"] = tabla["Plata"].astype(int)
+        tabla["Bronce"] = tabla["Bronce"].astype(int)
+        tabla["Puntos"] = tabla["Oro"] * 3 + tabla["Plata"] * 2 + tabla["Bronce"]
+        tabla["Puntos"] = tabla["Puntos"].astype(int)
+    except (KeyError, TypeError, ValueError, AttributeError):
+        return False, "Estructura inválida: las columnas de medallas deben contener números enteros."
+
+    return True, tabla
 
 if __name__ == "__main__":
     universidades_demo = [
@@ -123,3 +197,13 @@ if __name__ == "__main__":
     respuesta_demo = crear_dataframe_resultados(resultados_demo)
     print(respuesta_demo[0])
     print(respuesta_demo[1])
+    ok_df, df_demo = crear_dataframe_resultados(resultados_demo)
+    if ok_df == True:
+        print(calcular_medallas_por_universidad(df_demo))
+    if ok_df == True:
+        ok_med, df_med_demo = calcular_medallas_por_universidad(df_demo)
+        if ok_med == True:
+            print(calcular_puntos(df_med_demo))
+
+
+
