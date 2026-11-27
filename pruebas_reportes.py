@@ -10,8 +10,8 @@ from Reportes import (
     crear_dataframe_resultados,
     calcular_medallas_por_universidad,
     calcular_puntos,
+    identificar_universidad_ganadora,
 )
-
 
 # Entradas: ruta (texto con la ruta de un archivo de texto)
 # Salidas: lista con las líneas del archivo, sin el salto de línea final
@@ -432,8 +432,98 @@ def probar_calcular_puntos():
         texto = texto + " | " + fallos[i]
     return texto
 
+# Entradas: ninguna
+# Salidas: texto indicando si todas las pruebas de identificar_universidad_ganadora pasaron
+# Procedimientos: prueba ganador claro, desempate por oro, desempate por plata,
+# desempate por bronce, empate total persistente, una sola universidad, DataFrame
+# vacío, None, columnas faltantes y datos corruptos, acumulando cualquier fallo.
+def probar_identificar_universidad_ganadora():
+    fallos = []
+
+    # Caso 1: ganador claro por puntos
+    df_claro = pd.DataFrame([
+        {"Universidad": "Universidad de los Andes", "Oro": 0, "Plata": 1, "Bronce": 1, "Puntos": 3},
+        {"Universidad": "Javeriana Cali", "Oro": 2, "Plata": 0, "Bronce": 0, "Puntos": 6},
+    ])
+    ok, res = identificar_universidad_ganadora(df_claro)
+    if ok != True or res != "Javeriana Cali (6 puntos)":
+        fallos.append("caso 1: ganador claro")
+
+    # Caso 2: empate en puntos desempatado por Oro (ambas con 6 puntos)
+    df_empate_oro = pd.DataFrame([
+        {"Universidad": "Universidad de Lima", "Oro": 0, "Plata": 3, "Bronce": 0, "Puntos": 6},
+        {"Universidad": "Javeriana Cali", "Oro": 2, "Plata": 0, "Bronce": 0, "Puntos": 6},
+    ])
+    ok, res = identificar_universidad_ganadora(df_empate_oro)
+    if ok != True or res != "Javeriana Cali (6 puntos)":
+        fallos.append("caso 2: desempate por Oro")
+
+    # Caso 3: empate en puntos y oro, desempatado por Plata (ambas con 5 puntos y 1 oro)
+    df_empate_plata = pd.DataFrame([
+        {"Universidad": "Universidad de Chile", "Oro": 1, "Plata": 0, "Bronce": 2, "Puntos": 5},
+        {"Universidad": "Universidad de Lima", "Oro": 1, "Plata": 1, "Bronce": 0, "Puntos": 5},
+    ])
+    ok, res = identificar_universidad_ganadora(df_empate_plata)
+    if ok != True or res != "Universidad de Lima (5 puntos)":
+        fallos.append("caso 3: desempate por Plata")
+
+    # Caso 4: empate total persistente (mismos puntos, oros, platas y bronces)
+    df_empate_total = pd.DataFrame([
+        {"Universidad": "Javeriana Cali", "Oro": 1, "Plata": 1, "Bronce": 0, "Puntos": 5},
+        {"Universidad": "Universidad de Lima", "Oro": 1, "Plata": 1, "Bronce": 0, "Puntos": 5},
+        {"Universidad": "Universidad de Chile", "Oro": 0, "Plata": 0, "Bronce": 1, "Puntos": 1},
+    ])
+    ok, res = identificar_universidad_ganadora(df_empate_total)
+    if ok != True or res != "Empate entre: Javeriana Cali, Universidad de Lima (5 puntos)":
+        fallos.append("caso 4: empate total persistente")
+
+    # Caso 5: una sola universidad con tildes y comas
+    df_una = pd.DataFrame([
+        {"Universidad": 'Universidad, "Católica del Perú"', "Oro": 1, "Plata": 0, "Bronce": 0, "Puntos": 3},
+    ])
+    ok, res = identificar_universidad_ganadora(df_una)
+    if ok != True or res != 'Universidad, "Católica del Perú" (3 puntos)':
+        fallos.append("caso 5: una sola universidad con caracteres especiales")
+
+    # Caso 6: DataFrame vacío
+    df_vacio = pd.DataFrame(columns=["Universidad", "Oro", "Plata", "Bronce", "Puntos"])
+    ok, msg = identificar_universidad_ganadora(df_vacio)
+    if ok != False or msg != "No hay datos para identificar la universidad ganadora.":
+        fallos.append("caso 6: DataFrame vacío")
+
+    # Caso 7: None y tipos incorrectos
+    if identificar_universidad_ganadora(None)[0] != False:
+        fallos.append("caso 7a: entrada None")
+    if identificar_universidad_ganadora([{"Universidad": "X", "Puntos": 3}])[0] != False:
+        fallos.append("caso 7b: entrada lista")
+    if identificar_universidad_ganadora("texto")[0] != False:
+        fallos.append("caso 7c: entrada texto")
+
+    # Caso 8: falta columna Puntos
+    df_sin_puntos = pd.DataFrame([{"Universidad": "Javeriana Cali", "Oro": 1, "Plata": 0, "Bronce": 0}])
+    ok, msg = identificar_universidad_ganadora(df_sin_puntos)
+    if ok != False or msg != "Estructura inválida: falta la columna 'Puntos'.":
+        fallos.append("caso 8: falta columna Puntos")
+
+    # Caso 9: datos corruptos (texto en puntos o universidad None)
+    df_corrupto = pd.DataFrame([{"Universidad": "Javeriana Cali", "Oro": 1, "Plata": 0, "Bronce": 0, "Puntos": "seis"}])
+    if identificar_universidad_ganadora(df_corrupto)[0] != False:
+        fallos.append("caso 9a: puntos no numéricos")
+
+    df_uni_none = pd.DataFrame([{"Universidad": None, "Oro": 1, "Plata": 0, "Bronce": 0, "Puntos": 3}])
+    if identificar_universidad_ganadora(df_uni_none)[0] != False:
+        fallos.append("caso 9b: universidad None")
+
+    if len(fallos) == 0:
+        return "Todas las pruebas de identificar_universidad_ganadora pasaron"
+    texto = "Fallaron:"
+    for i in range(len(fallos)):
+        texto = texto + " | " + fallos[i]
+    return texto
+
 if __name__ == "__main__":
     print(probar_generar_medallero_csv())
     print(probar_crear_dataframe_resultados())
     print(probar_calcular_medallas_por_universidad())
     print(probar_calcular_puntos())
+    print(probar_identificar_universidad_ganadora())

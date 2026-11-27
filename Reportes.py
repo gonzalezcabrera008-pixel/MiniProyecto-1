@@ -183,6 +183,78 @@ def calcular_puntos(df_medallas):
 
     return True, tabla
 
+# Entradas: df_puntos (DataFrame de Pandas con las columnas "Universidad",
+# "Oro", "Plata", "Bronce" y "Puntos")
+# Salidas: una tupla (True, texto_ganadora) indicando la universidad ganadora
+# o el aviso de empate persistente con todas las empatadas, o (False, mensaje)
+# si ocurre un error de estructura
+# Procedimientos: 1) Validar que la entrada sea un DataFrame no vacío y tenga
+# las 5 columnas requeridas mediante ciclos por índices y banderas. 2) Copiar
+# la tabla, verificar que no haya universidades nulas y convertir las columnas
+# numéricas a entero. 3) Ordenar descendentemente por Puntos, Oro, Plata y
+# Bronce con sort_values. 4) Recorrer las filas por índices para recolectar
+# todas las universidades empatadas en el primer puesto y armar el texto final.
+def identificar_universidad_ganadora(df_puntos):
+    if type(df_puntos) != pd.DataFrame:
+        return False, "Estructura inválida: se esperaba un DataFrame de Pandas."
+
+    if len(df_puntos) == 0:
+        return False, "No hay datos para identificar la universidad ganadora."
+
+    columnas_actuales = list(df_puntos.columns)
+    requeridas = ["Universidad", "Oro", "Plata", "Bronce", "Puntos"]
+    for i in range(len(requeridas)):
+        encontrada = False
+        for j in range(len(columnas_actuales)):
+            if columnas_actuales[j] == requeridas[i]:
+                encontrada = True
+        if encontrada == False:
+            return False, "Estructura inválida: falta la columna '" + requeridas[i] + "'."
+
+    try:
+        tabla = df_puntos.copy()
+        if tabla["Universidad"].isnull().any():
+            return False, "Estructura inválida: hay registros sin nombre de universidad."
+
+        tabla["Oro"] = tabla["Oro"].astype(int)
+        tabla["Plata"] = tabla["Plata"].astype(int)
+        tabla["Bronce"] = tabla["Bronce"].astype(int)
+        tabla["Puntos"] = tabla["Puntos"].astype(int)
+
+        tabla = tabla.sort_values(
+            by=["Puntos", "Oro", "Plata", "Bronce"],
+            ascending=False
+        ).reset_index(drop=True)
+
+        max_puntos = int(tabla.iloc[0]["Puntos"])
+        max_oro = int(tabla.iloc[0]["Oro"])
+        max_plata = int(tabla.iloc[0]["Plata"])
+        max_bronce = int(tabla.iloc[0]["Bronce"])
+
+        ganadoras = []
+        for i in range(len(tabla)):
+            fila = tabla.iloc[i]
+            mismos_puntos = int(fila["Puntos"]) == max_puntos
+            mismos_oros = int(fila["Oro"]) == max_oro
+            mismas_platas = int(fila["Plata"]) == max_plata
+            mismos_bronces = int(fila["Bronce"]) == max_bronce
+
+            if mismos_puntos and mismos_oros and mismas_platas and mismos_bronces:
+                ganadoras.append(str(fila["Universidad"]))
+
+        if len(ganadoras) == 1:
+            return True, ganadoras[0] + " (" + str(max_puntos) + " puntos)"
+
+        nombres_empatados = ""
+        for i in range(len(ganadoras)):
+            if i > 0:
+                nombres_empatados = nombres_empatados + ", "
+            nombres_empatados = nombres_empatados + ganadoras[i]
+
+        return True, "Empate entre: " + nombres_empatados + " (" + str(max_puntos) + " puntos)"
+    except (KeyError, TypeError, ValueError, AttributeError):
+        return False, "Estructura inválida: los datos del DataFrame no tienen el formato esperado."
+
 if __name__ == "__main__":
     universidades_demo = [
         {"nombre": "Javeriana Cali", "pais": "Colombia", "ciudad": "Cali", "tipo": "nacional"},
@@ -204,6 +276,8 @@ if __name__ == "__main__":
         ok_med, df_med_demo = calcular_medallas_por_universidad(df_demo)
         if ok_med == True:
             print(calcular_puntos(df_med_demo))
-
-
+    if ok_df == True and ok_med == True:
+        ok_pts, df_pts_demo = calcular_puntos(df_med_demo)
+        if ok_pts == True:
+            print(identificar_universidad_ganadora(df_pts_demo))
 
