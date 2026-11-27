@@ -1,0 +1,461 @@
+import json
+
+#entradas: listas de universidades
+#salidas: el set con los nombres unicos y una lista con los nombres que se repitieron
+#procedimiento: Recorrer la lista de universidades, parar en cada indice, extraer de la llave nombre, asegurar que haya
+#algo, si hay algo quitar espacios y mayusculas, verificar si el nombre esta en el set si esta en el set agregar a la lista de repetidos,
+#antes verificando que no este en la lista de repetidos. Si no estaba en el set agregar al set.
+
+def contruirsetuniversidades(listauniversidades):
+    #crear un set para los nombres unicos y una lista para los que se repetieron, asi poder mostrarle al usuario cual se repitio
+    setuni=set()
+    repetidos= []
+    #verificar que lo que se ingrese sea una lista, no un texto, ni numeros, etc, porque lanzaria resultados no deseados o error
+    #para preveerlo se retorna simplemente.
+    if type(listauniversidades) != list:
+        return setuni, repetidos
+    
+    for i in range (len(listauniversidades)):
+        universidadactual=listauniversidades[i]
+        #Variable original es para mostrar y nombre cambiado es para comparar por eso a uno solo se aplica sstrip y a otro se le aplica
+        #minisculas.
+        nombrecambiado=""
+        nombreoriginal=""
+
+        #verificar que sea un diccionario para evitar que muestre error
+        if type (universidadactual)==dict:
+            #si es un dict buscar en la llave nombre y guardarla en nombre
+            nombre = universidadactual.get ("nombre")
+            #mientras haya algo en la llave:
+            if nombre!= None:
+                nombreoriginal=str(nombre).strip()
+                nombrecambiado=nombreoriginal.lower()
+                #si hay aunque sea espacios:
+                if nombrecambiado != "":
+                    if nombrecambiado in setuni:
+                        #marcador para agregarlo o no a lista de repetidos sin repetirlo
+                        agregar=True
+
+                        for j in range (len(repetidos)):
+                            if repetidos [j].lower()== nombrecambiado:
+                                agregar=False
+                        if agregar== True: 
+                            repetidos.append(nombreoriginal)
+                    else:
+                        setuni.add(nombrecambiado)
+    return setuni, repetidos                        
+
+#------------------------------------
+# Entradas: listadisciplinas
+# Salidas: el set con los nombres únicos de disciplinas y una lista con los nombres que se repitieron
+# Procedimientos: Recorrer la lista de disciplinas por índices, extraer la llave nombre, asegurar que haya algo, quitar espacios
+# y mayúsculas, verificar si el nombre ya está en el set: si está, agregarlo a repetidos (antes verificando que no esté ya en
+# la lista de repetidos) si no estaba, agregarlo al set.
+
+def construirsetdisciplinas(listadisciplinas):
+    # Set para los nombres únicos y lista para los repetidos, así se le puede mostrar al usuario cuáles se repitieron
+    setdis = set()
+    repetidos = []
+
+    # Si lo que llega no es una lista (texto, número, None) se retorna vacío para evitar errores
+    if type(listadisciplinas) != list:
+        return setdis, repetidos
+
+    for i in range(len(listadisciplinas)):
+        disciplinaactual = listadisciplinas[i]
+        # nombreoriginal sirve para mostrar, nombrecambiado (sin espacios y en minúscula) sirve para comparar
+        nombrecambiado = ""
+        nombreoriginal = ""
+
+        # Verificar que sea un diccionario para evitar errores
+        if type(disciplinaactual) == dict:
+            nombre = disciplinaactual.get("nombre")
+            if nombre != None:
+                nombreoriginal = str(nombre).strip()
+                nombrecambiado = nombreoriginal.lower()
+                # Si después de quitar espacios no quedó vacío
+                if nombrecambiado != "":
+                    if nombrecambiado in setdis:
+                        # Bandera para no agregar dos veces el mismo repetido
+                        agregar = True
+                        for j in range(len(repetidos)):
+                            if repetidos[j].lower() == nombrecambiado:
+                                agregar = False
+                        if agregar == True:
+                            repetidos.append(nombreoriginal)
+                    else:
+                        setdis.add(nombrecambiado)
+    return setdis, repetidos
+
+#----------------------------------------------
+# Entradas: listadeportistas
+# Salidas: el set con los números de documento únicos y una lista con los documentos que se repitieron
+# Procedimientos: Recorrer la lista de deportistas por índices, extraer la llave documento, asegurar que haya algo, convertirlo a
+# texto y quitar espacios, verificar si el documento ya está en el set: si está, agregarlo a repetidos (antes verificando que no
+# esté ya en la lista de repetidos) si no estaba, agregarlo al set.
+
+def construirsetdeportistas(listadeportistas):
+    # Set para los documentos únicos y lista para los repetidos, así se le puede mostrar al usuario cuáles se repitieron
+    setdep = set()
+    repetidos = []
+
+    # Si lo que llega no es una lista (texto, número, None) se retorna vacío para evitar errores
+    if type(listadeportistas) != list:
+        return setdep, repetidos
+
+    for i in range(len(listadeportistas)):
+        deportistaactual = listadeportistas[i]
+        documentotexto = ""
+
+        # Verificar que sea un diccionario para evitar errores
+        if type(deportistaactual) == dict:
+            documento = deportistaactual.get("documento")
+            if documento != None:
+                # str() por si el documento llega como número, strip()
+                documentotexto = str(documento).strip()
+                # Si después de quitar espacios no quedó vacío
+                if documentotexto != "":
+                    if documentotexto in setdep:
+                        # Bandera para no agregar dos veces el mismo repetido
+                        agregar = True
+                        for j in range(len(repetidos)):
+                            if repetidos[j] == documentotexto:
+                                agregar = False
+                        if agregar == True:
+                            repetidos.append(documentotexto)
+                    else:
+                        setdep.add(documentotexto)
+    return setdep, repetidos
+
+#---------------------------------------------
+ # Entradas: listauniversidades, listadisciplinas y listadeportistas (listas de diccionarios)
+# Salidas: True/False según si se encontró algún repetido, y un texto que indica cuáles son
+# Procedimientos: Llamar a las tres funciones que construyen los sets para obtener las listas de repetidos. Guardarlas en una
+# matriz (una fila por tipo de dato) junto a una lista de títulos. Recorrer la matriz si una fila
+# tiene repetidos, se marca hayduplicados = True y se arma su mensaje de texto con los repetidos separados por coma. Al final se
+# retorna el mensaje con los repetidos, o un mensaje de que no hay ninguno.
+
+def detectarduplicados(listauniversidades, listadisciplinas, listadeportistas):
+    setuni, repetidosuni = contruirsetuniversidades(listauniversidades)
+    setdis, repetidosdis = construirsetdisciplinas(listadisciplinas)
+    setdep, repetidosdep = construirsetdeportistas(listadeportistas)
+
+    # cada fila es la lista de repetidos de un tipo de dato titulos[i] es el nombre de la fila i
+    grupos = [repetidosuni, repetidosdis, repetidosdep]
+    titulos = ["Universidades repetidas: ", "Disciplinas repetidas: ", "Deportistas repetidos (documento): "]
+
+    hayduplicados = False
+    mensaje = ""
+
+    for i in range(len(grupos)):
+        grupoactual=grupos[i]
+        # Solo se arma el mensaje si esa fila tiene repetidos
+        if len(grupoactual) > 0:
+            hayduplicados = True
+
+            #salto de linea para organizar mejor, solo cuando ya hay algo escrito
+            if mensaje!= "":
+                mensaje =mensaje+"\n"
+
+            mensaje = mensaje+titulos[i]
+
+            #recorre lo que hay dentro de la lista 
+            for j in range(len(grupoactual)):
+                # Coma despues del primer elemento
+                if j > 0 :
+                    mensaje = mensaje+","
+                mensaje=mensaje+str(grupoactual[j])
+
+    if hayduplicados == True:
+        mensaje = "Se encontraron datos repetidos:\n\n" + mensaje
+    else:
+        mensaje = "No se encontraron datos repetidos."
+    return hayduplicados, mensaje
+
+
+#------------------------------------------------
+# Entradas: universidades, deportistas, disciplinas, inscripciones y resultados
+# Salidas: True/False según si la estructura es correcta, y un texto que explica el primer problema
+
+# Procedimientos: Guardar las 5 listas en una matriz junto con sus nombres y las llaves que debe tener cada una. Recorrer con
+# ciclos por índices cada lista, cada elemento y cada llave. Se verifica que cada dato sea una lista, que cada elemento sea un
+# diccionario y que cada llave exista y tenga un texto no vacío. Con la bandera valido se detiene la revisión en el primer
+# error y se retorna el mensaje que indica dónde está, si no hay errores se retorna True.
+
+
+def validarestructuradatos(listauniversidades, listadeportistas, listadisciplinas, listainscripciones, listaresultados):
+    # Las 5 listas juntas. La posición i de las tres listas siguientes habla del mismo tipo de dato
+    datos = [listauniversidades, listadeportistas, listadisciplinas, listainscripciones, listaresultados]
+    nombres = ["Universidades", "Deportistas", "Disciplinas", "Inscripciones", "Resultados"]
+    # Llaves que debe tener cada diccionario de cada lista
+    llaves = [
+        ["nombre", "pais", "ciudad", "tipo"],
+        ["nombre", "tipodoc", "documento", "universidad"],
+        ["nombre", "modalidad"],
+        ["tipodoc", "documento", "disciplina"],
+        ["disciplina", "universidad", "posicion"]
+    ]
+
+    #empieza en True y pasa a False al encontrar el primer error
+    valido = True
+    mensaje = "La estructura de los datos es válida."
+
+    #recorre las 5 listas
+    for i in range(len(datos)):
+        listaactual = datos[i]
+        nombrelista = nombres[i]
+        llavesactuales = llaves[i]
+
+        # revisar que sea lista
+        if valido == True and type(listaactual) != list:
+            valido = False
+            mensaje = nombrelista + ": los datos deben ser una lista."
+
+        # Solo si es lista se revisan sus elementos
+        if valido == True and type(listaactual) == list:
+
+            #recorre los diccionarios de la lista
+            for j in range(len(listaactual)):
+                elemento = listaactual[j]
+                posicion = str(j + 1)
+
+                # es un diccionario?
+                if valido == True and type(elemento) != dict:
+                    valido = False
+                    mensaje = nombrelista + ": el elemento " + posicion + " no es un diccionario."
+
+                # Solo si es diccionario se revisan sus llaves
+                if valido == True and type(elemento) == dict:
+
+                    # recorre las llaves que debe tener el diccionario
+                    for k in range(len(llavesactuales)):
+                        #pararse en cada llave dentro del conjunto de llaves que tiene el dicc.
+                        llave = llavesactuales[k]
+                        #si llave no esta en diccionario 
+                        if valido == True and llave not in elemento:
+                            valido = False
+                            mensaje = nombrelista + ": al elemento " + posicion + " le falta la llave '" + llave + "'."
+
+                        if valido == True:
+                            #saca el contenido de la llave
+                            valor = elemento[llave]
+
+                            if type(valor) != str:
+                                valido = False
+                                mensaje = nombrelista + ": en el elemento " + posicion + " la llave '" + llave + "' debe ser texto."
+
+                            if valido == True and valor.strip() == "":
+                                valido = False
+                                mensaje = nombrelista + ": en el elemento " + posicion + " la llave '" + llave + "' está vacía."
+    return valido, mensaje
+#----------------------------------
+# Entradas: listauniversidades, listadeportistas, listadisciplinas, listainscripciones y listaresultados (las 5 listas del sistema)
+# Salidas: si la estructura es correcta, si hay repetidos, y el texto que explica
+# Procedimientos: Primero se valida la estructura de las 5 listas. Si es inválida se retorna el error y no se buscan repetidos
+# Si es válida se buscan repetidos con detectarduplicados y se retorna su resultado. Esta funcion esta hecha para unir ambas funciones
+
+
+def validarantesdeguardar(listauniversidades, listadeportistas, listadisciplinas, listainscripciones, listaresultados):
+    # revisar que las 5 listas estén bien armadas
+    estructuravalida, mensajeestructura = validarestructuradatos(listauniversidades, listadeportistas, listadisciplinas, listainscripciones, listaresultados)
+
+    hayduplicados = False
+    mensajefinal = mensajeestructura
+    if estructuravalida==False:
+        #devuelve que si hay error (primero que encontro) y no alcanza a revisar que haya duplicados entonces devuelve que no
+        return estructuravalida, hayduplicados, mensajefinal    
+
+    # solo si la estructura es válida se buscan repetidos
+    if estructuravalida == True:
+        hayduplicados, mensajeduplicados = detectarduplicados(listauniversidades, listadisciplinas, listadeportistas)
+        if hayduplicados==True:
+            mensajefinal = mensajeduplicados
+    return estructuravalida, hayduplicados, mensajefinal    
+    
+
+#---------------------------------------------
+
+# Entradas: listauniversidades, listadeportistas, listadisciplinas, listainscripciones y listaresultados (las 5 listas del sistema)
+# Salidas: True si el archivo se guardó, False si hubo un error, y un texto que explica qué pasó
+# Procedimientos: Armar un diccionario con las 5 listas. Primero se convierte a texto JSON en memoria para comprobar que todos los
+# datos se pueden guardar (así, si algo falla, el archivo anterior no se daña). Si se pudo, se abre copa_loyola_datos.json en
+# modo escritura y se guarda con json.dump. Los errores de escritura (sin permiso, archivo bloqueado, disco lleno, etc.) se
+# capturan con try / except y se retornan como mensaje en lugar de detener el programa.
+
+def guardardatosjson(listauniversidades, listadeportistas, listadisciplinas, listainscripciones, listaresultados):
+    nombrearchivo = "copa_loyola_datos.json"
+
+    # Diccionario con toda la información del sistema
+    datos = {
+        "universidades": listauniversidades,
+        "deportistas": listadeportistas,
+        "disciplinas": listadisciplinas,
+        "inscripciones": listainscripciones,
+        "resultados": listaresultados
+    }
+
+    guardado = False
+    mensaje = ""
+
+    # probar la conversión a JSON sin tocar el archivo
+    try:
+        #json.dump es para convertir
+        json.dumps(datos)
+        convertible = True
+        #Si hay algo que JSON no entiende (por ejemplo un set), el except captura el error y arma el mensaje.
+    except (TypeError, ValueError) as error:
+        convertible = False
+        mensaje = "Los datos contienen valores que no se pueden guardar en JSON: " + str(error)
+
+    #ssi los datos sirven, guardarlos en el archivo
+    if convertible == True:
+        try:
+            #encoding="utf-8" es el permiso para que el archivo pueda guardar letras con tilde.
+            #ensure_ascii=False hace que “Fútbol” se vea como “Fútbol” al abrir el archivo, y no como F\u00fatbol.
+
+            archivo = open(nombrearchivo, "w", encoding="utf-8")     
+            json.dump(datos, archivo, ensure_ascii=False, indent=4)    
+            archivo.close()                                            
+            guardado = True
+            mensaje = "Datos guardados correctamente en " + nombrearchivo
+        except PermissionError:
+            mensaje = "No se pudo guardar: no hay permiso para escribir en " + nombrearchivo + " (puede estar abierto en otro programa o ser de solo lectura)."
+        except OSError as error:
+            mensaje = "No se pudo guardar " + nombrearchivo + ": " + str(error)
+
+    return guardado, mensaje
+if __name__ == "__main__":
+    u = [{"nombre": "Javeriana", "pais": "Colombia", "ciudad": "Cali", "tipo": "Nacional"}]
+    d = [{"nombre": "Ana", "tipodoc": "CC", "documento": "1001", "universidad": "Javeriana"}]
+    s = [{"nombre": "Fútbol", "modalidad": "Equipo"}]
+    n = [{"tipodoc": "CC", "documento": "1001", "disciplina": "Fútbol"}]
+    r = [{"disciplina": "Fútbol", "universidad": "Javeriana", "posicion": "Oro"}]
+    rmalo = [{"disciplina": {"Fútbol"}, "universidad": "Javeriana", "posicion": "Oro"}]
+
+    print("F7 Prueba 1:", guardardatosjson(u, d, s, n, r))
+    print("F7 Prueba 2:", guardardatosjson(u, d, s, n, rmalo))   
+#------------------------------
+# Entradas: listauniversidades, listadeportistas, listadisciplinas, listainscripciones y listaresultados (las 5 listas del sistema,
+# que se van a llenar con lo que haya en el archivo)
+# Salidas:  True si los datos se cargaron, False si hubo un error, y un texto que explica qué pasó
+# Procedimientos: Leer el texto de copa_loyola_datos.json y convertirlo con json.loads, capturando con try / except los errores
+# (archivo inexistente, ilegible o con formato JSON inválido). Comprobar que el contenido sea un diccionario y que sus 5 listas
+# tengan la estructura correcta con validarestructuradatos. Solo si todo está bien se vacían las 5 listas del sistema con .pop() y
+# se llenan con .append() (en sitio, sin reasignarlas). Si algo falla, las listas actuales quedan intactas.
+
+def cargardatosjson(listauniversidades, listadeportistas, listadisciplinas, listainscripciones, listaresultados):
+    nombrearchivo = "copa_loyola_datos.json"
+
+    cargado = False
+    mensaje = ""
+    datos = None
+    leido = False
+
+    # leer el archivo y convertir su texto a datos de Python
+    try:
+        #Abre el archivo. "r" es read (solo leer, no se cambia nada). utf-8 es para leer bien las tildes.
+        archivo = open(nombrearchivo, "r", encoding="utf-8")
+        #Lee todo el contenido del archivo y lo guarda en la variable texto, como un único texto largo.
+        texto = archivo.read()
+        archivo.close()
+        #Convierte ese texto en listas y diccionarios de Python.
+        datos = json.loads(texto)
+        leido = True
+    except FileNotFoundError:
+        mensaje = "No se encontró el archivo " + nombrearchivo + ". Primero guarda los datos."
+    except json.JSONDecodeError as error:
+        mensaje = "El archivo " + nombrearchivo + " tiene un formato JSON inválido (línea " + str(error.lineno) + ", columna " + str(error.colno) + ")."
+    except UnicodeDecodeError:
+        mensaje = "No se pudo leer el archivo " + nombrearchivo + ": contiene caracteres que no son texto válido."
+    except PermissionError:
+        mensaje = "No se pudo leer el archivo " + nombrearchivo + ": no hay permiso para abrirlo."
+    except OSError as error:
+        mensaje = "No se pudo leer el archivo " + nombrearchivo + ": " + str(error)
+
+    #revisar que lo leído tenga la estructura correcta
+    if leido == True:
+        if type(datos) != dict:
+            mensaje = "El archivo no tiene el formato esperado: debe contener un diccionario con universidades, deportistas, disciplinas, inscripciones y resultados."
+        else:
+            universidadesleidas = datos.get("universidades")
+            deportistasleidos = datos.get("deportistas")
+            disciplinasleidas = datos.get("disciplinas")
+            inscripcionesleidas = datos.get("inscripciones")
+            resultadosleidos = datos.get("resultados")
+
+            estructuravalida, mensajeestructura = validarestructuradatos(universidadesleidas, deportistasleidos, disciplinasleidas, inscripcionesleidas, resultadosleidos)
+
+            if estructuravalida == False:
+                mensaje = "El archivo tiene datos inválidos. " + mensajeestructura
+            else:
+                #todo está bien, se reconstruyen las 5 listas en sitio
+                destinos = [listauniversidades, listadeportistas, listadisciplinas, listainscripciones, listaresultados]
+                fuentes = [universidadesleidas, deportistasleidos, disciplinasleidas, inscripcionesleidas, resultadosleidos]
+
+                for i in range(len(destinos)):
+                    # Vaciar la lista actual con .pop(), una vez por cada elemento que tiene
+                    for j in range(len(destinos[i])):
+                        destinos[i].pop()
+                    # Llenarla con lo leído del archivo con .append()
+                    for j in range(len(fuentes[i])):
+                        destinos[i].append(fuentes[i][j])
+
+                cargado = True
+                mensaje = "Datos cargados correctamente desde " + nombrearchivo + "."
+
+    return cargado, mensaje
+
+if __name__ == "__main__":
+    u = [{"nombre": "Javeriana", "pais": "Colombia", "ciudad": "Cali", "tipo": "Nacional"}]
+    d = [{"nombre": "Ana", "tipodoc": "CC", "documento": "1001", "universidad": "Javeriana"}]
+    s = [{"nombre": "Fútbol", "modalidad": "Equipo"}]
+    n = [{"tipodoc": "CC", "documento": "1001", "disciplina": "Fútbol"}]
+    r = [{"disciplina": "Fútbol", "universidad": "Javeriana", "posicion": "Oro"}]
+    lu = []
+    ld = []
+    ls = []
+    ln = []
+    lr = []
+
+    guardardatosjson(u, d, s, n, r)
+    print("F8 Prueba 1:", cargardatosjson(lu, ld, ls, ln, lr))
+    print("   Cantidades:", len(lu), len(ld), len(ls), len(ln), len(lr))
+
+    archivo = open("copa_loyola_datos.json", "w", encoding="utf-8")
+    archivo.write("{ esto no es json")
+    archivo.close()
+    print("F8 Prueba 2:", cargardatosjson(lu, ld, ls, ln, lr))
+    print("   Cantidades:", len(lu), len(ld), len(ls), len(ln), len(lr))
+
+    guardardatosjson(u, d, s, n, r)
+#-----------------------------------
+# Entradas: listauniversidades, listadeportistas, listadisciplinas, listainscripciones y listaresultados (las 5 listas del sistema)
+# Salidas: cuántos registros tiene cada lista
+# Procedimientos: Guardar las 5 listas en una matriz y crear una lista de 5 contadores en cero. Recorrer la matriz con doble ciclo
+# por índices, si la fila es una lista, se suma 1 al contador de esa fila por cada elemento que tenga. Si una fila no es una lista
+# su contador queda en 0. Al final se retornan los 5 contadores.
+
+def contarregistros(listauniversidades, listadeportistas, listadisciplinas, listainscripciones, listaresultados):
+    # Las 5 listas juntas (matriz) y un contador por cada una, en el mismo orden
+    listas = [listauniversidades, listadeportistas, listadisciplinas, listainscripciones, listaresultados]
+    contadores = [0, 0, 0, 0, 0]
+
+    # Recorre las 5 listas
+    for i in range(len(listas)):
+        # Solo se cuenta si de verdad es una lista (si llega None u otra cosa, queda en 0)
+        if type(listas[i]) == list:
+            # Recorre los elementos de esa lista y suma 1 por cada uno
+            for j in range(len(listas[i])):
+                contadores[i] = contadores[i] + 1
+
+    return contadores[0], contadores[1], contadores[2], contadores[3], contadores[4]
+if __name__ == "__main__":
+    u = [{"nombre": "Javeriana"}, {"nombre": "Lima"}]
+    d = [{"documento": "1001"}, {"documento": "1002"}, {"documento": "1003"}]
+    s = [{"nombre": "Fútbol"}]
+    n = [{"documento": "1001"}, {"documento": "1002"}, {"documento": "1003"}, {"documento": "1004"}]
+    r = [{"posicion": "Oro"}, {"posicion": "Plata"}]
+
+    print("Prueba 1:", contarregistros(u, d, s, n, r))
+    print("Prueba 2:", contarregistros([], [], [], [], []))
+    print("Prueba 3:", contarregistros(None, "texto", 5, n, r))
