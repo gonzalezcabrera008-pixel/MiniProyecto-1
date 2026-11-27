@@ -255,6 +255,50 @@ def identificar_universidad_ganadora(df_puntos):
     except (KeyError, TypeError, ValueError, AttributeError):
         return False, "Estructura inválida: los datos del DataFrame no tienen el formato esperado."
 
+# Entradas: df (DataFrame de Pandas con las columnas "Universidad", "Oro",
+# "Plata", "Bronce" y "Puntos") y ruta (texto, opcional; por defecto
+# "reporte_copa_loyola.csv")
+# Salidas: una tupla (True, mensaje) si el archivo se exportó correctamente,
+# o (False, mensaje) con la descripción del error encontrado
+# Procedimientos: 1) Verificar que la entrada sea un DataFrame no vacío y que
+# la ruta sea un texto válido. 2) Comprobar mediante ciclos por índices y
+# banderas que existan las 5 columnas requeridas. 3) Abrir el archivo con
+# codificación utf-8-sig y exportar el DataFrame con to_csv(index=False).
+# 4) Controlar errores de permisos, tipo o sistema operativo con try/except.
+def exportar_reporte_csv(df, ruta="reporte_copa_loyola.csv"):
+    if type(df) != pd.DataFrame:
+        return False, "Estructura inválida: se esperaba un DataFrame de Pandas."
+
+    if len(df) == 0:
+        return False, "No hay datos para exportar el reporte."
+
+    if type(ruta) != str:
+        return False, "La ruta del archivo no es válida."
+
+    columnas_actuales = list(df.columns)
+    requeridas = ["Universidad", "Oro", "Plata", "Bronce", "Puntos"]
+    for i in range(len(requeridas)):
+        encontrada = False
+        for j in range(len(columnas_actuales)):
+            if columnas_actuales[j] == requeridas[i]:
+                encontrada = True
+        if encontrada == False:
+            return False, "Estructura inválida: falta la columna '" + requeridas[i] + "'."
+
+    try:
+        with open(ruta, "w", newline="", encoding="utf-8-sig") as archivo:
+            df.to_csv(archivo, index=False)
+    except PermissionError:
+        return False, "No se pudo escribir " + str(ruta) + ". Si está abierto en Excel u otro programa, ciérralo e inténtalo de nuevo."
+    except TypeError:
+        return False, "La ruta del archivo no es válida."
+    except OSError:
+        return False, "No se pudo crear " + str(ruta) + ". Revisa que la carpeta exista y que haya espacio en el disco."
+    except (ValueError, AttributeError):
+        return False, "Estructura inválida: no se pudieron exportar los datos del DataFrame."
+
+    return True, "Reporte exportado a " + ruta + " con " + str(len(df)) + " universidades."
+
 if __name__ == "__main__":
     universidades_demo = [
         {"nombre": "Javeriana Cali", "pais": "Colombia", "ciudad": "Cali", "tipo": "nacional"},
@@ -280,4 +324,7 @@ if __name__ == "__main__":
         ok_pts, df_pts_demo = calcular_puntos(df_med_demo)
         if ok_pts == True:
             print(identificar_universidad_ganadora(df_pts_demo))
+    if ok_df == True and ok_med == True and ok_pts == True:
+        print(exportar_reporte_csv(df_pts_demo))
+
 

@@ -11,6 +11,7 @@ from Reportes import (
     calcular_medallas_por_universidad,
     calcular_puntos,
     identificar_universidad_ganadora,
+    exportar_reporte_csv,
 )
 
 # Entradas: ruta (texto con la ruta de un archivo de texto)
@@ -521,9 +522,84 @@ def probar_identificar_universidad_ganadora():
         texto = texto + " | " + fallos[i]
     return texto
 
+# Entradas: ninguna
+# Salidas: texto indicando si todas las pruebas de exportar_reporte_csv pasaron
+# Procedimientos: prueba exportación normal, nombres con tildes/comas y marca
+# BOM utf-8-sig, DataFrame vacío, None, tipos erróneos, columnas faltantes,
+# rutas inválidas y llamada con 1 parámetro por defecto, acumulando fallos.
+def probar_exportar_reporte_csv():
+    fallos = []
+    encabezado = "Universidad,Oro,Plata,Bronce,Puntos"
+
+    # Caso 1: exportación normal y verificación de contenido sin columna índice
+    df_normal = pd.DataFrame([
+        {"Universidad": "Javeriana Cali", "Oro": 2, "Plata": 1, "Bronce": 0, "Puntos": 8},
+        {"Universidad": "Universidad de Lima", "Oro": 1, "Plata": 1, "Bronce": 1, "Puntos": 6},
+    ])
+    ok, msg = exportar_reporte_csv(df_normal, "prueba_reporte_normal.csv")
+    lineas = leer_lineas("prueba_reporte_normal.csv")
+    if ok != True or len(lineas) != 3:
+        fallos.append("caso 1: exportación normal o cantidad de filas")
+    elif lineas[0] != encabezado or lineas[1] != "Javeriana Cali,2,1,0,8" or lineas[2] != "Universidad de Lima,1,1,1,6":
+        fallos.append("caso 1: contenido del CSV o presencia de índice")
+
+    # Caso 2: tildes, comas y verificación de marca BOM utf-8-sig
+    df_raros = pd.DataFrame([
+        {"Universidad": 'Universidad, "Católica del Perú"', "Oro": 1, "Plata": 0, "Bronce": 0, "Puntos": 3},
+    ])
+    ok, msg = exportar_reporte_csv(df_raros, "prueba_reporte_raros.csv")
+    filas = leer_filas_csv("prueba_reporte_raros.csv")
+    with open("prueba_reporte_raros.csv", "rb") as archivo:
+        primeros_bytes = archivo.read(3)
+    if ok != True or len(filas) != 2 or filas[1][0] != 'Universidad, "Católica del Perú"':
+        fallos.append("caso 2: tildes y comas en to_csv")
+    if primeros_bytes != b"\xef\xbb\xbf":
+        fallos.append("caso 2: falta marca BOM utf-8-sig")
+
+    # Caso 3: DataFrame vacío
+    df_vacio = pd.DataFrame(columns=["Universidad", "Oro", "Plata", "Bronce", "Puntos"])
+    ok, msg = exportar_reporte_csv(df_vacio, "prueba_reporte_vacio.csv")
+    if ok != False or msg != "No hay datos para exportar el reporte.":
+        fallos.append("caso 3: DataFrame vacío")
+
+    # Caso 4: None y tipos incorrectos
+    if exportar_reporte_csv(None, "prueba_x.csv")[0] != False:
+        fallos.append("caso 4a: entrada None")
+    if exportar_reporte_csv([{"Universidad": "X"}], "prueba_x.csv")[0] != False:
+        fallos.append("caso 4b: entrada lista")
+    if exportar_reporte_csv("texto", "prueba_x.csv")[0] != False:
+        fallos.append("caso 4c: entrada texto")
+
+    # Caso 5: columnas faltantes
+    df_sin_puntos = pd.DataFrame([{"Universidad": "Javeriana Cali", "Oro": 1, "Plata": 0, "Bronce": 0}])
+    ok, msg = exportar_reporte_csv(df_sin_puntos, "prueba_x.csv")
+    if ok != False or msg != "Estructura inválida: falta la columna 'Puntos'.":
+        fallos.append("caso 5: falta columna Puntos")
+
+    # Caso 6: rutas inválidas (carpeta inexistente, ruta que es carpeta, ruta None)
+    if exportar_reporte_csv(df_normal, "carpeta_inexistente/reporte.csv")[0] != False:
+        fallos.append("caso 6a: carpeta inexistente")
+    if exportar_reporte_csv(df_normal, ".")[0] != False:
+        fallos.append("caso 6b: ruta es una carpeta")
+    if exportar_reporte_csv(df_normal, None) != (False, "La ruta del archivo no es válida."):
+        fallos.append("caso 6c: ruta None")
+
+    # Caso 7: llamada por defecto con 1 parámetro creando reporte_copa_loyola.csv
+    ok, msg = exportar_reporte_csv(df_normal)
+    if ok != True or msg != "Reporte exportado a reporte_copa_loyola.csv con 2 universidades.":
+        fallos.append("caso 7: llamada por defecto a reporte_copa_loyola.csv")
+
+    if len(fallos) == 0:
+        return "Todas las pruebas de exportar_reporte_csv pasaron"
+    texto = "Fallaron:"
+    for i in range(len(fallos)):
+        texto = texto + " | " + fallos[i]
+    return texto
+
 if __name__ == "__main__":
     print(probar_generar_medallero_csv())
     print(probar_crear_dataframe_resultados())
     print(probar_calcular_medallas_por_universidad())
     print(probar_calcular_puntos())
     print(probar_identificar_universidad_ganadora())
+    print(probar_exportar_reporte_csv())
