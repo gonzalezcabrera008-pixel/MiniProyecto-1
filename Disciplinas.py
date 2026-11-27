@@ -34,6 +34,7 @@ def registrardisciplina(nombre, modalidad, listadisciplinas):
     listadisciplinas.append(nuevadisciplina)
     return True, "Disciplina registrada con éxito"
 
+#---------------------------------------------
 #entradas: lista de disciplinas
 #salidas: lista de disciplinas con formato diferente para mostrar en la interfaz
 #procedimiento: crear lista nueva, para i en el rango de la cantidad de disciplinas, individualmente 
@@ -54,6 +55,7 @@ def enumerardisciplinas(listadisciplinas):
         resultado.append(texto)
     return resultado
 
+#---------------------------------------------
 #entradas: nombre de la disciplina a eliminar, lista de disciplinas, lista de inscripciones y lista de resultados
 #salidas: true/false con mensaje respectivo
 #procedimiento: Verificar que el campo no este vacio, quitar espacios. Recorrer la lista de disciplinas buscando el nombre y 
@@ -61,6 +63,7 @@ def enumerardisciplinas(listadisciplinas):
 #resultados asociados, retornar false si tiene. Si no tiene, eliminar la disciplina por su posicion y retornar true.
 
 #Diagrama de flujo D3.3
+
 
 
 def borrardisciplina(nombrebuscar, listadisciplinas, listainscripciones, listaresultados):

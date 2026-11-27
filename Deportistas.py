@@ -1,7 +1,9 @@
-#entradas: nombre completo, tipo de documento, número de documento, universidad, lista de deportistas y lista de universidades
-#salidas: True y mensaje de éxito si registra, o False y mensaje de error
-#procedimiento: validar que los campos estén llenos. Verificar que la universidad exista y que no haya otro deportista
-#con el mismo número de documento. Si todo sale bien, guardar el nuevo deportista en la lista.
+#entradas: por parametro nombre documento universidad disciplina y lista de deportistas
+#salidas: true o false con mensaje de exito o error respectivamente
+#procedimiento: Primero validar que los campos esten llenos, cuenta cuantas letras hay en cada uno, si es igual a 0 retorna false y un 
+#mensaje de error. Luego valida que no hayan duplicados. 
+#si duplicado es igual a true entonces retorna false y el mensaje de error
+#Si todo sale bien llega al final del codigo y guarda cada dato en la lista. 
 
 #Diagrama de flujo D2.1
 
@@ -36,6 +38,7 @@ def registrardeportista(nombre, tipodoc, documento, universidad, listadeportista
     listadeportistas.append(nuevodeportista)
     return True, "Deportista registrado con éxito"
 
+#---------------------------------------------
 #entradas: lista de deportistas
 #salidas: lista de deportistas con formato diferente para mostrar en la interfaz
 #procedimiento: crear lista nueva, para i en el rango de la cantidad de deportistas, individualmente 
@@ -57,10 +60,13 @@ def enumerardeportistas(listadeportistas):
     return resultado
 
 
-#entradas: tipo de documento, número de documento, nuevo nombre, nueva universidad, lista de deportistas y lista de universidades
-#salidas: True y mensaje de éxito si actualiza, o False y mensaje de error
-#procedimiento: validar los campos y comprobar que la nueva universidad exista. Recorrer la lista buscando el deportista
-#por tipo y número de documento. Si se encuentra, actualizar el nombre y la universidad.
+#----------------------------------------------
+#entradas: nombre a buscar, datos a cambiar (pais, ciudad,tipo)
+ #salidas: true o false mensaje respectivo de exito o error
+ #proceedimiento: pasar por parametro entradas, al igual que el registro validar espacios para que no cuenten y pasen como si hubiera algo escrito
+ #en los campos, evitar que queden campos vacios, si sucede lanzar error, luego validar que se escriba uno de los dos tipos. 
+ #Pasar a buscar si existe el nombre de la universidad que se quiere actualizar, si nombre en lista es igual a nombre buscar entonces actualizar datos.
+ #Si se logra actualizar retornar true, mensaje de exito. De lo contrario False, Mensaje error.
 
 #Diagrama de flujo D2.3
 def actualizardeportista(tipodocbuscar, documentobuscar, nnombre, nuniversidad, listadeportistas, listauniversidades):
@@ -98,10 +104,11 @@ def actualizardeportista(tipodocbuscar, documentobuscar, nnombre, nuniversidad, 
     else:
         return False, "El deportista no está registrado."
 
+#-----------------------------------------------------
 #entradas:tipo de documento a buscar y documento a buscar
 #salidas: true/false mensaje respectivo
-#procedimiento: Verificar que no falten campos. Dentro del rango de la lista de deportistas, si tipo de documento y
-#documento son iguales que los valores que se buscan, verificar que el deportista no tenga inscripciones, retornar false
+#procedimiento: Verificar que no falten campos, no admitir espacios. Dentro del rango de la lista de deportistas si tipo de doc y 
+# documento son iguales que los valores que se buscan, entonces verificar que el deportista no tenga iinscripciones, retornar false 
 #si tiene y si no eliminar diccionario. Devolver true o false y mensaje.
 
 #Diagrama de flujo D2.4
@@ -115,15 +122,19 @@ def borrardeportista(tipodocbuscar, documentobuscar, listadeportistas, listainsc
 
     eliminado = False
     for i in range(len(listadeportistas)):
-        if eliminado == False and listadeportistas[i]["tipodoc"] == tipodocbuscar and listadeportistas[i]["documento"] == documentobuscar:
+        if listadeportistas[i]["tipodoc"] == tipodocbuscar and listadeportistas[i]["documento"] == documentobuscar:
             #Validar que no tenga inscripciones
             for j in range(len(listainscripciones)):
                 if listainscripciones[j]["tipodoc"] == tipodocbuscar and listainscripciones[j]["documento"] == documentobuscar:
                     return False, "No se puede eliminar: el deportista tiene inscripciones."
             listadeportistas.pop(i)
             eliminado = True
+            break
 
     if eliminado == True:
         return True, "Deportista eliminado con éxito."
     else:
         return False, "El deportista no está registrado."
+
+
+   
