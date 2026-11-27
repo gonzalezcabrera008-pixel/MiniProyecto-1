@@ -299,6 +299,7 @@ def guardardatosjson(listauniversidades, listadeportistas, listadisciplinas, lis
 
     # probar la conversión a JSON sin tocar el archivo
     try:
+        #json.dump es para convertir
         json.dumps(datos)
         convertible = True
         #Si hay algo que JSON no entiende (por ejemplo un set), el except captura el error y arma el mensaje.
@@ -309,6 +310,9 @@ def guardardatosjson(listauniversidades, listadeportistas, listadisciplinas, lis
     #ssi los datos sirven, guardarlos en el archivo
     if convertible == True:
         try:
+            #encoding="utf-8" es el permiso para que el archivo pueda guardar letras con tilde.
+            #ensure_ascii=False hace que “Fútbol” se vea como “Fútbol” al abrir el archivo, y no como F\u00fatbol.
+
             archivo = open(nombrearchivo, "w", encoding="utf-8")     
             json.dump(datos, archivo, ensure_ascii=False, indent=4)    
             archivo.close()                                            
@@ -322,3 +326,94 @@ def guardardatosjson(listauniversidades, listadeportistas, listadisciplinas, lis
     return guardado, mensaje
     
 #------------------------------
+# Entradas: listauniversidades, listadeportistas, listadisciplinas, listainscripciones y listaresultados (las 5 listas del sistema,
+# que se van a llenar con lo que haya en el archivo)
+# Salidas:  True si los datos se cargaron, False si hubo un error, y un texto que explica qué pasó
+# Procedimientos: Leer el texto de copa_loyola_datos.json y convertirlo con json.loads, capturando con try / except los errores
+# (archivo inexistente, ilegible o con formato JSON inválido). Comprobar que el contenido sea un diccionario y que sus 5 listas
+# tengan la estructura correcta con validarestructuradatos. Solo si todo está bien se vacían las 5 listas del sistema con .pop() y
+# se llenan con .append() (en sitio, sin reasignarlas). Si algo falla, las listas actuales quedan intactas.
+
+def cargardatosjson(listauniversidades, listadeportistas, listadisciplinas, listainscripciones, listaresultados):
+    nombrearchivo = "copa_loyola_datos.json"
+
+    cargado = False
+    mensaje = ""
+    datos = None
+    leido = False
+
+    # leer el archivo y convertir su texto a datos de Python
+    try:
+        #Abre el archivo. "r" es read (solo leer, no se cambia nada). utf-8 es para leer bien las tildes.
+        archivo = open(nombrearchivo, "r", encoding="utf-8")
+        #Lee todo el contenido del archivo y lo guarda en la variable texto, como un único texto largo.
+        texto = archivo.read()
+        archivo.close()
+        #Convierte ese texto en listas y diccionarios de Python.
+        datos = json.loads(texto)
+        leido = True
+    except FileNotFoundError:
+        mensaje = "No se encontró el archivo " + nombrearchivo + ". Primero guarda los datos."
+    except json.JSONDecodeError as error:
+        mensaje = "El archivo " + nombrearchivo + " tiene un formato JSON inválido (línea " + str(error.lineno) + ", columna " + str(error.colno) + ")."
+    except UnicodeDecodeError:
+        mensaje = "No se pudo leer el archivo " + nombrearchivo + ": contiene caracteres que no son texto válido."
+    except PermissionError:
+        mensaje = "No se pudo leer el archivo " + nombrearchivo + ": no hay permiso para abrirlo."
+    except OSError as error:
+        mensaje = "No se pudo leer el archivo " + nombrearchivo + ": " + str(error)
+
+    #revisar que lo leído tenga la estructura correcta
+    if leido == True:
+        if type(datos) != dict:
+            mensaje = "El archivo no tiene el formato esperado: debe contener un diccionario con universidades, deportistas, disciplinas, inscripciones y resultados."
+        else:
+            universidadesleidas = datos.get("universidades")
+            deportistasleidos = datos.get("deportistas")
+            disciplinasleidas = datos.get("disciplinas")
+            inscripcionesleidas = datos.get("inscripciones")
+            resultadosleidos = datos.get("resultados")
+
+            estructuravalida, mensajeestructura = validarestructuradatos(universidadesleidas, deportistasleidos, disciplinasleidas, inscripcionesleidas, resultadosleidos)
+
+            if estructuravalida == False:
+                mensaje = "El archivo tiene datos inválidos. " + mensajeestructura
+            else:
+                #todo está bien, se reconstruyen las 5 listas en sitio
+                destinos = [listauniversidades, listadeportistas, listadisciplinas, listainscripciones, listaresultados]
+                fuentes = [universidadesleidas, deportistasleidos, disciplinasleidas, inscripcionesleidas, resultadosleidos]
+
+                for i in range(len(destinos)):
+                    # Vaciar la lista actual con .pop(), una vez por cada elemento que tiene
+                    for j in range(len(destinos[i])):
+                        destinos[i].pop()
+                    # Llenarla con lo leído del archivo con .append()
+                    for j in range(len(fuentes[i])):
+                        destinos[i].append(fuentes[i][j])
+
+                cargado = True
+                mensaje = "Datos cargados correctamente desde " + nombrearchivo + "."
+
+    return cargado, mensaje
+
+#-----------------------------------
+# Entradas: listauniversidades, listadeportistas, listadisciplinas, listainscripciones y listaresultados (las 5 listas del sistema)
+# Salidas: cuántos registros tiene cada lista
+# Procedimientos: Guardar las 5 listas en una matriz y crear una lista de 5 contadores en cero. Recorrer la matriz con doble ciclo
+# por índices, si la fila es una lista, se suma 1 al contador de esa fila por cada elemento que tenga. Si una fila no es una lista
+# su contador queda en 0. Al final se retornan los 5 contadores.
+
+def contarregistros(listauniversidades, listadeportistas, listadisciplinas, listainscripciones, listaresultados):
+    # Las 5 listas juntas (matriz) y un contador por cada una, en el mismo orden
+    listas = [listauniversidades, listadeportistas, listadisciplinas, listainscripciones, listaresultados]
+    contadores = [0, 0, 0, 0, 0]
+
+    # Recorre las 5 listas
+    for i in range(len(listas)):
+        # Solo se cuenta si de verdad es una lista (si llega None u otra cosa, queda en 0)
+        if type(listas[i]) == list:
+            # Recorre los elementos de esa lista y suma 1 por cada uno
+            for j in range(len(listas[i])):
+                contadores[i] = contadores[i] + 1
+
+    return contadores[0], contadores[1], contadores[2], contadores[3], contadores[4]
